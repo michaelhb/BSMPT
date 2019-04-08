@@ -17,7 +17,7 @@
 		along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "ClassTemplate.h"
+#include "ClassPotentialSMRSS.h"
 #include "IncludeAllModels.h"
 using namespace Eigen;
 
@@ -31,13 +31,13 @@ using namespace Eigen;
  *  using the tadpole conditions),
  * nParCT (number of counterterms) as well as nVEV (number of VEVs for minimization)
  */
-Class_Template::Class_Template ()
+Class_Potential_SMRSS::Class_Potential_SMRSS ()
 {
   Model = C_ModelSMRSS; // global int constant which will be used to tell the program which model is called
   NNeutralHiggs = 5; // number of neutral Higgs bosons at T = 0
   NChargedHiggs=0; // number of charged Higgs bosons  at T = 0 (all d.o.f.)
 
-  nPar = 5; // number of parameters in the tree-Level Lagrangian
+  nPar = 4; // number of parameters in the tree-Level Lagrangian
   nParCT = 7; // number of parameters in the counterterm potential
 
   nVEV=2; // number of VEVs to minimize the potential
@@ -46,7 +46,7 @@ Class_Template::Class_Template ()
 
 }
 
-Class_Template::~Class_Template ()
+Class_Potential_SMRSS::~Class_Potential_SMRSS ()
 {
 }
 
@@ -54,7 +54,7 @@ Class_Template::~Class_Template ()
  * returns a string which tells the user the chronological order of the counterterms. Use this to
  * complement the legend of the given input file
  */
-std::string Class_Template::addLegendCT(){
+std::string Class_Potential_SMRSS::addLegendCT(){
   std::string out = "dT\tdlambda\tdmsquared";
   return out;
 }
@@ -63,7 +63,7 @@ std::string Class_Template::addLegendCT(){
  * returns a string which tells the user the chronological order of the VEVs and the critical temperature. Use this to
  * complement the legend of the given input file
  */
-std::string Class_Template::addLegendTemp(){
+std::string Class_Potential_SMRSS::addLegendTemp(){
   std::string out = "T_c\tv_c";
   //out += "Your VEV order";
   out += "omega";
@@ -75,7 +75,7 @@ std::string Class_Template::addLegendTemp(){
  * complement the legend of the given input file
  *
  */
-std::string Class_Template::addLegendTripleCouplings(){
+std::string Class_Potential_SMRSS::addLegendTripleCouplings(){
 	std::vector<std::string> particles;
 	particles.resize(NHiggs);
 	//here you have to define the particle names in the vector particles
@@ -112,7 +112,7 @@ std::string Class_Template::addLegendTripleCouplings(){
  * returns a string which tells the user the chronological order of the VEVs. Use this to
  * complement the legend of the given input file
  */
-std::string Class_Template::addLegendVEV(){
+std::string Class_Potential_SMRSS::addLegendVEV(){
 	std::string out;
 	//out = "Your VEV order";
 	out = "omega";
@@ -122,27 +122,25 @@ std::string Class_Template::addLegendVEV(){
 /**
  * Reads the string linestr and sets the parameter point
  */
-void Class_Template::ReadAndSet(const std::string& linestr, std::vector<double>& par )
+void Class_Potential_SMRSS::ReadAndSet(const std::string& linestr, std::vector<double>& par )
 {
 	std::stringstream ss(linestr);
 	double tmp;
 
-	double lmu_hs, llambda_h, lmu_s, llambda_s, llambda_m;
+	double lmu_hs, lmu_s, llambda_s, llambda_m;
 
-	for(int k=1;k<=5;k++)
+	for(int k=1;k<=4;k++)
 	{
 	      ss>>tmp;
 	      if(k==1) lmu_hs = tmp;
-	      else if(k==2) llambda_h = tmp;
-	      else if (k==3) lmu_s = tmp;
-	      else if (k==4) llambda_s = tmp;
-	      else if (k==5) llambda_m = tmp;
+	      else if (k==2) lmu_s = tmp;
+	      else if (k==3) llambda_s = tmp;
+	      else if (k==4) llambda_m = tmp;
 	}
 	par[0] = lmu_hs;
-	par[1] = llambda_h;
-	par[2] = lmu_s;
-	par[3] = llambda_s;
-	par[4] = llambda_m;
+	par[1] = lmu_s;
+	par[2] = llambda_s;
+	par[3] = llambda_m;
 
 
 	set_gen(par); // This you have to call so that everything will be set
@@ -153,16 +151,18 @@ void Class_Template::ReadAndSet(const std::string& linestr, std::vector<double>&
 /**
  * Set Class Object as well as the VEV configuration
  */
-void Class_Template::set_gen(const std::vector<double>& par) {
+void Class_Potential_SMRSS::set_gen(const std::vector<double>& par) {
 
+    // direct input params
+    mu_hs = par[0];
+    mu_s = par[1];
+    lambda_s = par[2];
+    lambda_m = par[3];
 
-	ms = par[0];
-	lambda = par[1];
+    // EWSB condition eliminates lambda_h:
+    lambda_h = (2.0*mu_hs)/(std::pow(C_vev0,2));
 
-	g=C_g;
-
-	yt = std::sqrt(2)/C_vev0 * C_MassTop;
-
+    // This sets the renormalization scale
 	scale = C_vev0;
 
 	vevTreeMin.resize(nVEV);
@@ -170,6 +170,7 @@ void Class_Template::set_gen(const std::vector<double>& par) {
 
 	// Here you have to set the vector vevTreeMin. The vector vevTree will then be set by the function MinimizeOrderVEV
 	vevTreeMin[0] = C_vev0;
+	vevTreeMin[1] = std::sqrt(-1.0*(mu_s/lambda_s)); // from EWSB
 
 	MinimizeOrderVEV(vevTreeMin,vevTree);
 	if(!SetCurvatureDone) SetCurvatureArrays();
@@ -179,7 +180,7 @@ void Class_Template::set_gen(const std::vector<double>& par) {
  * set your counterterm parameters from the entries of par as well as the entries of Curvature_Higgs_CT_L1 to
  * Curvature_Higgs_CT_L4.
  */
-void Class_Template::set_CT_Pot_Par(const std::vector<double>& par){
+void Class_Potential_SMRSS::set_CT_Pot_Par(const std::vector<double>& par){
 
 	dT = par[0];
 	dlambda = par[1];
@@ -194,7 +195,7 @@ void Class_Template::set_CT_Pot_Par(const std::vector<double>& par){
 /**
  * console output of all Parameters
  */
-void Class_Template::write() {
+void Class_Potential_SMRSS::write() {
 
 	std::cout << "The parameters are : " << std::endl;
 	std::cout << "lambda = " << lambda << std::endl
@@ -213,7 +214,7 @@ void Class_Template::write() {
 /**
  * Calculates the counterterms. Here you need to work out the scheme and implement the formulas.
  */
-void Class_Template::calc_CT(std::vector<double>& par){
+void Class_Potential_SMRSS::calc_CT(std::vector<double>& par){
 	bool Debug=false;
 	if(Debug) std::cout << "Start" << __func__ << std::endl;
 
@@ -253,7 +254,7 @@ void Class_Template::calc_CT(std::vector<double>& par){
 
 
 
-void Class_Template::TripleHiggsCouplings()
+void Class_Potential_SMRSS::TripleHiggsCouplings()
 {
 	bool Debug=false;
 	if(Debug) std::cout << "Debug turned on in " << __func__ << std::endl;
@@ -355,7 +356,7 @@ void Class_Template::TripleHiggsCouplings()
 
 }
 
-void Class_Template::SetCurvatureArrays(){
+void Class_Potential_SMRSS::SetCurvatureArrays(){
   /*
    *  Here you have to set the vectors
    *  Curvature_Higgs_L1,Curvature_Higgs_L2,Curvature_Higgs_L3,Curvature_Higgs_L4
@@ -365,22 +366,375 @@ void Class_Template::SetCurvatureArrays(){
    */
 
 	initVectors();
-	SetCurvatureDone=true;
+
 	for(int i=0;i<NHiggs;i++) HiggsVev[i] = vevTree[i];
 
+	// NB the curvature arrays are initialised to zero, so
+	// only writing the non zero entries here.
 
-	Curvature_Higgs_L2[0][0] = ms;
-	Curvature_Higgs_L4[0][0][0][0] = lambda;
+    Curvature_Higgs_L2[1][1] = (mu_hs)/2;
+    Curvature_Higgs_L2[2][2] = (mu_hs)/2;
+    Curvature_Higgs_L2[3][3] = (mu_hs)/2;
+    Curvature_Higgs_L2[4][4] = (mu_hs)/2;
+    Curvature_Higgs_L2[5][5] = -(mu_s);
 
-	Curvature_Gauge_G2H2[0][0][0][0] = 4*std::pow(g,2);
+    Curvature_Higgs_L4[1][1][1][1] = (-3*(lambda_h))/2;
+    Curvature_Higgs_L4[1][1][2][2] = -3*(lambda_h);
+    Curvature_Higgs_L4[1][1][3][3] = -3*(lambda_h);
+    Curvature_Higgs_L4[1][1][4][4] = -3*(lambda_h);
+    Curvature_Higgs_L4[1][1][5][5] = -3*(lambda_m);
+    Curvature_Higgs_L4[1][2][1][2] = -3*(lambda_h);
+    Curvature_Higgs_L4[1][2][2][1] = -3*(lambda_h);
+    Curvature_Higgs_L4[1][3][1][3] = -3*(lambda_h);
+    Curvature_Higgs_L4[1][3][3][1] = -3*(lambda_h);
+    Curvature_Higgs_L4[1][4][1][4] = -3*(lambda_h);
+    Curvature_Higgs_L4[1][4][4][1] = -3*(lambda_h);
+    Curvature_Higgs_L4[1][5][1][5] = -3*(lambda_m);
+    Curvature_Higgs_L4[1][5][5][1] = -3*(lambda_m);
+    Curvature_Higgs_L4[2][1][1][2] = -3*(lambda_h);
+    Curvature_Higgs_L4[2][1][2][1] = -3*(lambda_h);
+    Curvature_Higgs_L4[2][2][1][1] = -3*(lambda_h);
+    Curvature_Higgs_L4[2][2][2][2] = (-3*(lambda_h))/2;
+    Curvature_Higgs_L4[2][2][3][3] = -3*(lambda_h);
+    Curvature_Higgs_L4[2][2][4][4] = -3*(lambda_h);
+    Curvature_Higgs_L4[2][2][5][5] = -3*(lambda_m);
+    Curvature_Higgs_L4[2][3][2][3] = -3*(lambda_h);
+    Curvature_Higgs_L4[2][3][3][2] = -3*(lambda_h);
+    Curvature_Higgs_L4[2][4][2][4] = -3*(lambda_h);
+    Curvature_Higgs_L4[2][4][4][2] = -3*(lambda_h);
+    Curvature_Higgs_L4[2][5][2][5] = -3*(lambda_m);
+    Curvature_Higgs_L4[2][5][5][2] = -3*(lambda_m);
+    Curvature_Higgs_L4[3][1][1][3] = -3*(lambda_h);
+    Curvature_Higgs_L4[3][1][3][1] = -3*(lambda_h);
+    Curvature_Higgs_L4[3][2][2][3] = -3*(lambda_h);
+    Curvature_Higgs_L4[3][2][3][2] = -3*(lambda_h);
+    Curvature_Higgs_L4[3][3][1][1] = -3*(lambda_h);
+    Curvature_Higgs_L4[3][3][2][2] = -3*(lambda_h);
+    Curvature_Higgs_L4[3][3][3][3] = (-3*(lambda_h))/2;
+    Curvature_Higgs_L4[3][3][4][4] = -3*(lambda_h);
+    Curvature_Higgs_L4[3][3][5][5] = -3*(lambda_m);
+    Curvature_Higgs_L4[3][4][3][4] = -3*(lambda_h);
+    Curvature_Higgs_L4[3][4][4][3] = -3*(lambda_h);
+    Curvature_Higgs_L4[3][5][3][5] = -3*(lambda_m);
+    Curvature_Higgs_L4[3][5][5][3] = -3*(lambda_m);
+    Curvature_Higgs_L4[4][1][1][4] = -3*(lambda_h);
+    Curvature_Higgs_L4[4][1][4][1] = -3*(lambda_h);
+    Curvature_Higgs_L4[4][2][2][4] = -3*(lambda_h);
+    Curvature_Higgs_L4[4][2][4][2] = -3*(lambda_h);
+    Curvature_Higgs_L4[4][3][3][4] = -3*(lambda_h);
+    Curvature_Higgs_L4[4][3][4][3] = -3*(lambda_h);
+    Curvature_Higgs_L4[4][4][1][1] = -3*(lambda_h);
+    Curvature_Higgs_L4[4][4][2][2] = -3*(lambda_h);
+    Curvature_Higgs_L4[4][4][3][3] = -3*(lambda_h);
+    Curvature_Higgs_L4[4][4][4][4] = (-3*(lambda_h))/2;
+    Curvature_Higgs_L4[4][4][5][5] = -3*(lambda_m);
+    Curvature_Higgs_L4[4][5][4][5] = -3*(lambda_m);
+    Curvature_Higgs_L4[4][5][5][4] = -3*(lambda_m);
+    Curvature_Higgs_L4[5][1][1][5] = -3*(lambda_m);
+    Curvature_Higgs_L4[5][1][5][1] = -3*(lambda_m);
+    Curvature_Higgs_L4[5][2][2][5] = -3*(lambda_m);
+    Curvature_Higgs_L4[5][2][5][2] = -3*(lambda_m);
+    Curvature_Higgs_L4[5][3][3][5] = -3*(lambda_m);
+    Curvature_Higgs_L4[5][3][5][3] = -3*(lambda_m);
+    Curvature_Higgs_L4[5][4][4][5] = -3*(lambda_m);
+    Curvature_Higgs_L4[5][4][5][4] = -3*(lambda_m);
+    Curvature_Higgs_L4[5][5][1][1] = -3*(lambda_m);
+    Curvature_Higgs_L4[5][5][2][2] = -3*(lambda_m);
+    Curvature_Higgs_L4[5][5][3][3] = -3*(lambda_m);
+    Curvature_Higgs_L4[5][5][4][4] = -3*(lambda_m);
+    Curvature_Higgs_L4[5][5][5][5] = -6*(lambda_s);
 
-	Curvature_Quark_F2H1[1][0][0] = yt;
-	Curvature_Quark_F2H1[0][1][0] = yt;
+    Curvature_Gauge_G2H2[1][1][1][1] = std::pow(C_g,2)/2;
+    Curvature_Gauge_G2H2[1][1][2][2] = std::pow(C_g,2)/2;
+    Curvature_Gauge_G2H2[1][1][3][3] = std::pow(C_g,2)/2;
+    Curvature_Gauge_G2H2[1][1][4][4] = std::pow(C_g,2)/2;
+    Curvature_Gauge_G2H2[1][4][1][3] = 2*(C_g)*(C_gs);
+    Curvature_Gauge_G2H2[1][4][2][4] = 2*(C_g)*(C_gs);
+    Curvature_Gauge_G2H2[1][4][3][1] = 2*(C_g)*(C_gs);
+    Curvature_Gauge_G2H2[1][4][4][2] = 2*(C_g)*(C_gs);
+    Curvature_Gauge_G2H2[2][2][1][1] = std::pow(C_g,2)/2;
+    Curvature_Gauge_G2H2[2][2][2][2] = std::pow(C_g,2)/2;
+    Curvature_Gauge_G2H2[2][2][3][3] = std::pow(C_g,2)/2;
+    Curvature_Gauge_G2H2[2][2][4][4] = std::pow(C_g,2)/2;
+    Curvature_Gauge_G2H2[2][3][1][4] = -2*std::pow(C_g,2);
+    Curvature_Gauge_G2H2[2][3][2][3] = 2*std::pow(C_g,2);
+    Curvature_Gauge_G2H2[2][3][3][2] = 2*std::pow(C_g,2);
+    Curvature_Gauge_G2H2[2][3][4][1] = -2*std::pow(C_g,2);
+    Curvature_Gauge_G2H2[3][2][1][4] = -2*std::pow(C_g,2);
+    Curvature_Gauge_G2H2[3][2][2][3] = 2*std::pow(C_g,2);
+    Curvature_Gauge_G2H2[3][2][3][2] = 2*std::pow(C_g,2);
+    Curvature_Gauge_G2H2[3][2][4][1] = -2*std::pow(C_g,2);
+    Curvature_Gauge_G2H2[3][3][1][1] = std::pow(C_g,2)/2;
+    Curvature_Gauge_G2H2[3][3][2][2] = std::pow(C_g,2)/2;
+    Curvature_Gauge_G2H2[3][3][3][3] = std::pow(C_g,2)/2;
+    Curvature_Gauge_G2H2[3][3][4][4] = std::pow(C_g,2)/2;
+    Curvature_Gauge_G2H2[3][4][1][1] = (C_g)*(C_gs);
+    Curvature_Gauge_G2H2[3][4][2][2] = (C_g)*(C_gs);
+    Curvature_Gauge_G2H2[3][4][3][3] = -((C_g)*(C_gs));
+    Curvature_Gauge_G2H2[3][4][4][4] = -((C_g)*(C_gs));
+    Curvature_Gauge_G2H2[4][1][1][3] = 2*(C_g)*(C_gs);
+    Curvature_Gauge_G2H2[4][1][2][4] = 2*(C_g)*(C_gs);
+    Curvature_Gauge_G2H2[4][1][3][1] = 2*(C_g)*(C_gs);
+    Curvature_Gauge_G2H2[4][1][4][2] = 2*(C_g)*(C_gs);
+    Curvature_Gauge_G2H2[4][3][1][1] = (C_g)*(C_gs);
+    Curvature_Gauge_G2H2[4][3][2][2] = (C_g)*(C_gs);
+    Curvature_Gauge_G2H2[4][3][3][3] = -((C_g)*(C_gs));
+    Curvature_Gauge_G2H2[4][3][4][4] = -((C_g)*(C_gs));
+    Curvature_Gauge_G2H2[4][4][1][1] = std::pow(C_g,2)/2;
+    Curvature_Gauge_G2H2[4][4][2][2] = std::pow(C_g,2)/2;
+    Curvature_Gauge_G2H2[4][4][3][3] = std::pow(C_g,2)/2;
+    Curvature_Gauge_G2H2[4][4][4][4] = std::pow(C_g,2)/2;
+
+    // Set up Yukawa couplings for weak eigenbasis
+    Matrix3cd ckm, Mu, Md, Me, Yu, Yd, Ye;
+    ckm << C_Vud, C_Vus, C_Vub,
+           C_Vcd, C_Vcs, C_Vcb,
+           C_Vtd, C_Vts, C_Vtb;
+
+    Mu << C_MassUp, 0, 0,
+          0, C_MassCharm, 0,
+          0, 0, C_MassTop;
+
+    Md << C_MassDown, 0, 0,
+          0, C_MassStrange, 0,
+          0, 0, C_MassBottom;
+
+    Me << C_MassElectron, 0, 0,
+          0, C_MassMu, 0,
+          0, 0, C_MassTau;
+
+    Yu = (std::sqrt(2) / C_vev0)*(ckm.adjoint())*Mu*ckm;
+    Yd = (std::sqrt(2) / C_vev0)*ckm*Md*(ckm.adjoint());
+    Ye = (std::sqrt(2) / C_vev0)*Me;
+
+    std::complex<double> II(0,1);
+
+    // NB only the diagonals are non zero for this one...
+    Curvature_Lepton_F2H1[1][2][3] = 2*std::sqrt(2)*Ye(1,1);
+    Curvature_Lepton_F2H1[1][2][4] = (2.0*II)*std::sqrt(2)*Ye(1,1);
+    Curvature_Lepton_F2H1[1][5][3] = 2*std::sqrt(2)*Ye(1,2);
+    Curvature_Lepton_F2H1[1][5][4] = (2.0*II)*std::sqrt(2)*Ye(1,2);
+    Curvature_Lepton_F2H1[1][8][3] = 2*std::sqrt(2)*Ye(1,3);
+    Curvature_Lepton_F2H1[1][8][4] = (2.0*II)*std::sqrt(2)*Ye(1,3);
+    Curvature_Lepton_F2H1[2][1][3] = 2*std::sqrt(2)*Ye(1,1);
+    Curvature_Lepton_F2H1[2][1][4] = (2.0*II)*std::sqrt(2)*Ye(1,1);
+    Curvature_Lepton_F2H1[2][3][1] = 2*std::sqrt(2)*Ye(1,1);
+    Curvature_Lepton_F2H1[2][3][2] = (2.0*II)*std::sqrt(2)*Ye(1,1);
+    Curvature_Lepton_F2H1[2][4][3] = 2*std::sqrt(2)*Ye(2,1);
+    Curvature_Lepton_F2H1[2][4][4] = (2.0*II)*std::sqrt(2)*Ye(2,1);
+    Curvature_Lepton_F2H1[2][6][1] = 2*std::sqrt(2)*Ye(2,1);
+    Curvature_Lepton_F2H1[2][6][2] = (2.0*II)*std::sqrt(2)*Ye(2,1);
+    Curvature_Lepton_F2H1[2][7][3] = 2*std::sqrt(2)*Ye(3,1);
+    Curvature_Lepton_F2H1[2][7][4] = (2.0*II)*std::sqrt(2)*Ye(3,1);
+    Curvature_Lepton_F2H1[2][9][1] = 2*std::sqrt(2)*Ye(3,1);
+    Curvature_Lepton_F2H1[2][9][2] = (2.0*II)*std::sqrt(2)*Ye(3,1);
+    Curvature_Lepton_F2H1[3][2][1] = 2*std::sqrt(2)*Ye(1,1);
+    Curvature_Lepton_F2H1[3][2][2] = (2.0*II)*std::sqrt(2)*Ye(1,1);
+    Curvature_Lepton_F2H1[3][5][1] = 2*std::sqrt(2)*Ye(1,2);
+    Curvature_Lepton_F2H1[3][5][2] = (2.0*II)*std::sqrt(2)*Ye(1,2);
+    Curvature_Lepton_F2H1[3][8][1] = 2*std::sqrt(2)*Ye(1,3);
+    Curvature_Lepton_F2H1[3][8][2] = (2.0*II)*std::sqrt(2)*Ye(1,3);
+    Curvature_Lepton_F2H1[4][2][3] = 2*std::sqrt(2)*Ye(2,1);
+    Curvature_Lepton_F2H1[4][2][4] = (2.0*II)*std::sqrt(2)*Ye(2,1);
+    Curvature_Lepton_F2H1[4][5][3] = 2*std::sqrt(2)*Ye(2,2);
+    Curvature_Lepton_F2H1[4][5][4] = (2.0*II)*std::sqrt(2)*Ye(2,2);
+    Curvature_Lepton_F2H1[4][8][3] = 2*std::sqrt(2)*Ye(2,3);
+    Curvature_Lepton_F2H1[4][8][4] = (2.0*II)*std::sqrt(2)*Ye(2,3);
+    Curvature_Lepton_F2H1[5][1][3] = 2*std::sqrt(2)*Ye(1,2);
+    Curvature_Lepton_F2H1[5][1][4] = (2.0*II)*std::sqrt(2)*Ye(1,2);
+    Curvature_Lepton_F2H1[5][3][1] = 2*std::sqrt(2)*Ye(1,2);
+    Curvature_Lepton_F2H1[5][3][2] = (2.0*II)*std::sqrt(2)*Ye(1,2);
+    Curvature_Lepton_F2H1[5][4][3] = 2*std::sqrt(2)*Ye(2,2);
+    Curvature_Lepton_F2H1[5][4][4] = (2.0*II)*std::sqrt(2)*Ye(2,2);
+    Curvature_Lepton_F2H1[5][6][1] = 2*std::sqrt(2)*Ye(2,2);
+    Curvature_Lepton_F2H1[5][6][2] = (2.0*II)*std::sqrt(2)*Ye(2,2);
+    Curvature_Lepton_F2H1[5][7][3] = 2*std::sqrt(2)*Ye(3,2);
+    Curvature_Lepton_F2H1[5][7][4] = (2.0*II)*std::sqrt(2)*Ye(3,2);
+    Curvature_Lepton_F2H1[5][9][1] = 2*std::sqrt(2)*Ye(3,2);
+    Curvature_Lepton_F2H1[5][9][2] = (2.0*II)*std::sqrt(2)*Ye(3,2);
+    Curvature_Lepton_F2H1[6][2][1] = 2*std::sqrt(2)*Ye(2,1);
+    Curvature_Lepton_F2H1[6][2][2] = (2.0*II)*std::sqrt(2)*Ye(2,1);
+    Curvature_Lepton_F2H1[6][5][1] = 2*std::sqrt(2)*Ye(2,2);
+    Curvature_Lepton_F2H1[6][5][2] = (2.0*II)*std::sqrt(2)*Ye(2,2);
+    Curvature_Lepton_F2H1[6][8][1] = 2*std::sqrt(2)*Ye(2,3);
+    Curvature_Lepton_F2H1[6][8][2] = (2.0*II)*std::sqrt(2)*Ye(2,3);
+    Curvature_Lepton_F2H1[7][2][3] = 2*std::sqrt(2)*Ye(3,1);
+    Curvature_Lepton_F2H1[7][2][4] = (2.0*II)*std::sqrt(2)*Ye(3,1);
+    Curvature_Lepton_F2H1[7][5][3] = 2*std::sqrt(2)*Ye(3,2);
+    Curvature_Lepton_F2H1[7][5][4] = (2.0*II)*std::sqrt(2)*Ye(3,2);
+    Curvature_Lepton_F2H1[7][8][3] = 2*std::sqrt(2)*Ye(3,3);
+    Curvature_Lepton_F2H1[7][8][4] = (2.0*II)*std::sqrt(2)*Ye(3,3);
+    Curvature_Lepton_F2H1[8][1][3] = 2*std::sqrt(2)*Ye(1,3);
+    Curvature_Lepton_F2H1[8][1][4] = (2.0*II)*std::sqrt(2)*Ye(1,3);
+    Curvature_Lepton_F2H1[8][3][1] = 2*std::sqrt(2)*Ye(1,3);
+    Curvature_Lepton_F2H1[8][3][2] = (2.0*II)*std::sqrt(2)*Ye(1,3);
+    Curvature_Lepton_F2H1[8][4][3] = 2*std::sqrt(2)*Ye(2,3);
+    Curvature_Lepton_F2H1[8][4][4] = (2.0*II)*std::sqrt(2)*Ye(2,3);
+    Curvature_Lepton_F2H1[8][6][1] = 2*std::sqrt(2)*Ye(2,3);
+    Curvature_Lepton_F2H1[8][6][2] = (2.0*II)*std::sqrt(2)*Ye(2,3);
+    Curvature_Lepton_F2H1[8][7][3] = 2*std::sqrt(2)*Ye(3,3);
+    Curvature_Lepton_F2H1[8][7][4] = (2.0*II)*std::sqrt(2)*Ye(3,3);
+    Curvature_Lepton_F2H1[8][9][1] = 2*std::sqrt(2)*Ye(3,3);
+    Curvature_Lepton_F2H1[8][9][2] = (2.0*II)*std::sqrt(2)*Ye(3,3);
+    Curvature_Lepton_F2H1[9][2][1] = 2*std::sqrt(2)*Ye(3,1);
+    Curvature_Lepton_F2H1[9][2][2] = (2.0*II)*std::sqrt(2)*Ye(3,1);
+    Curvature_Lepton_F2H1[9][5][1] = 2*std::sqrt(2)*Ye(3,2);
+    Curvature_Lepton_F2H1[9][5][2] = (2.0*II)*std::sqrt(2)*Ye(3,2);
+    Curvature_Lepton_F2H1[9][8][1] = 2*std::sqrt(2)*Ye(3,3);
+    Curvature_Lepton_F2H1[9][8][2] = (2.0*II)*std::sqrt(2)*Ye(3,3);
+
+
+    Curvature_Quark_F2H1[1][2][3] = 2*std::sqrt(2)*Yu(1,1);
+    Curvature_Quark_F2H1[1][2][4] = (-2.0*II)*std::sqrt(2)*Yu(1,1);
+    Curvature_Quark_F2H1[1][4][1] = 2*std::sqrt(2)*Yd(1,1);
+    Curvature_Quark_F2H1[1][4][2] = (2.0*II)*std::sqrt(2)*Yd(1,1);
+    Curvature_Quark_F2H1[1][6][3] = 2*std::sqrt(2)*Yu(1,2);
+    Curvature_Quark_F2H1[1][6][4] = (-2.0*II)*std::sqrt(2)*Yu(1,2);
+    Curvature_Quark_F2H1[1][8][1] = 2*std::sqrt(2)*Yd(1,2);
+    Curvature_Quark_F2H1[1][8][2] = (2.0*II)*std::sqrt(2)*Yd(1,2);
+    Curvature_Quark_F2H1[1][10][3] = 2*std::sqrt(2)*Yu(1,3);
+    Curvature_Quark_F2H1[1][10][4] = (-2.0*II)*std::sqrt(2)*Yu(1,3);
+    Curvature_Quark_F2H1[1][12][1] = 2*std::sqrt(2)*Yd(1,3);
+    Curvature_Quark_F2H1[1][12][2] = (2.0*II)*std::sqrt(2)*Yd(1,3);
+    Curvature_Quark_F2H1[2][1][3] = 2*std::sqrt(2)*Yu(1,1);
+    Curvature_Quark_F2H1[2][1][4] = (-2.0*II)*std::sqrt(2)*Yu(1,1);
+    Curvature_Quark_F2H1[2][3][1] = -2*std::sqrt(2)*Yu(1,1);
+    Curvature_Quark_F2H1[2][3][2] = (2.0*II)*std::sqrt(2)*Yu(1,1);
+    Curvature_Quark_F2H1[2][5][3] = 2*std::sqrt(2)*Yu(2,1);
+    Curvature_Quark_F2H1[2][5][4] = (-2.0*II)*std::sqrt(2)*Yu(2,1);
+    Curvature_Quark_F2H1[2][7][1] = -2*std::sqrt(2)*Yu(2,1);
+    Curvature_Quark_F2H1[2][7][2] = (2.0*II)*std::sqrt(2)*Yu(2,1);
+    Curvature_Quark_F2H1[2][9][3] = 2*std::sqrt(2)*Yu(3,1);
+    Curvature_Quark_F2H1[2][9][4] = (-2.0*II)*std::sqrt(2)*Yu(3,1);
+    Curvature_Quark_F2H1[2][11][1] = -2*std::sqrt(2)*Yu(3,1);
+    Curvature_Quark_F2H1[2][11][2] = (2.0*II)*std::sqrt(2)*Yu(3,1);
+    Curvature_Quark_F2H1[3][2][1] = -2*std::sqrt(2)*Yu(1,1);
+    Curvature_Quark_F2H1[3][2][2] = (2.0*II)*std::sqrt(2)*Yu(1,1);
+    Curvature_Quark_F2H1[3][4][3] = 2*std::sqrt(2)*Yd(1,1);
+    Curvature_Quark_F2H1[3][4][4] = (2.0*II)*std::sqrt(2)*Yd(1,1);
+    Curvature_Quark_F2H1[3][6][1] = -2*std::sqrt(2)*Yu(1,2);
+    Curvature_Quark_F2H1[3][6][2] = (2.0*II)*std::sqrt(2)*Yu(1,2);
+    Curvature_Quark_F2H1[3][8][3] = 2*std::sqrt(2)*Yd(1,2);
+    Curvature_Quark_F2H1[3][8][4] = (2.0*II)*std::sqrt(2)*Yd(1,2);
+    Curvature_Quark_F2H1[3][10][1] = -2*std::sqrt(2)*Yu(1,3);
+    Curvature_Quark_F2H1[3][10][2] = (2.0*II)*std::sqrt(2)*Yu(1,3);
+    Curvature_Quark_F2H1[3][12][3] = 2*std::sqrt(2)*Yd(1,3);
+    Curvature_Quark_F2H1[3][12][4] = (2.0*II)*std::sqrt(2)*Yd(1,3);
+    Curvature_Quark_F2H1[4][1][1] = 2*std::sqrt(2)*Yd(1,1);
+    Curvature_Quark_F2H1[4][1][2] = (2.0*II)*std::sqrt(2)*Yd(1,1);
+    Curvature_Quark_F2H1[4][3][3] = 2*std::sqrt(2)*Yd(1,1);
+    Curvature_Quark_F2H1[4][3][4] = (2.0*II)*std::sqrt(2)*Yd(1,1);
+    Curvature_Quark_F2H1[4][5][1] = 2*std::sqrt(2)*Yd(2,1);
+    Curvature_Quark_F2H1[4][5][2] = (2.0*II)*std::sqrt(2)*Yd(2,1);
+    Curvature_Quark_F2H1[4][7][3] = 2*std::sqrt(2)*Yd(2,1);
+    Curvature_Quark_F2H1[4][7][4] = (2.0*II)*std::sqrt(2)*Yd(2,1);
+    Curvature_Quark_F2H1[4][9][1] = 2*std::sqrt(2)*Yd(3,1);
+    Curvature_Quark_F2H1[4][9][2] = (2.0*II)*std::sqrt(2)*Yd(3,1);
+    Curvature_Quark_F2H1[4][11][3] = 2*std::sqrt(2)*Yd(3,1);
+    Curvature_Quark_F2H1[4][11][4] = (2.0*II)*std::sqrt(2)*Yd(3,1);
+    Curvature_Quark_F2H1[5][2][3] = 2*std::sqrt(2)*Yu(2,1);
+    Curvature_Quark_F2H1[5][2][4] = (-2.0*II)*std::sqrt(2)*Yu(2,1);
+    Curvature_Quark_F2H1[5][4][1] = 2*std::sqrt(2)*Yd(2,1);
+    Curvature_Quark_F2H1[5][4][2] = (2.0*II)*std::sqrt(2)*Yd(2,1);
+    Curvature_Quark_F2H1[5][6][3] = 2*std::sqrt(2)*Yu(2,2);
+    Curvature_Quark_F2H1[5][6][4] = (-2.0*II)*std::sqrt(2)*Yu(2,2);
+    Curvature_Quark_F2H1[5][8][1] = 2*std::sqrt(2)*Yd(2,2);
+    Curvature_Quark_F2H1[5][8][2] = (2.0*II)*std::sqrt(2)*Yd(2,2);
+    Curvature_Quark_F2H1[5][10][3] = 2*std::sqrt(2)*Yu(2,3);
+    Curvature_Quark_F2H1[5][10][4] = (-2.0*II)*std::sqrt(2)*Yu(2,3);
+    Curvature_Quark_F2H1[5][12][1] = 2*std::sqrt(2)*Yd(2,3);
+    Curvature_Quark_F2H1[5][12][2] = (2.0*II)*std::sqrt(2)*Yd(2,3);
+    Curvature_Quark_F2H1[6][1][3] = 2*std::sqrt(2)*Yu(1,2);
+    Curvature_Quark_F2H1[6][1][4] = (-2.0*II)*std::sqrt(2)*Yu(1,2);
+    Curvature_Quark_F2H1[6][3][1] = -2*std::sqrt(2)*Yu(1,2);
+    Curvature_Quark_F2H1[6][3][2] = (2.0*II)*std::sqrt(2)*Yu(1,2);
+    Curvature_Quark_F2H1[6][5][3] = 2*std::sqrt(2)*Yu(2,2);
+    Curvature_Quark_F2H1[6][5][4] = (-2.0*II)*std::sqrt(2)*Yu(2,2);
+    Curvature_Quark_F2H1[6][7][1] = -2*std::sqrt(2)*Yu(2,2);
+    Curvature_Quark_F2H1[6][7][2] = (2.0*II)*std::sqrt(2)*Yu(2,2);
+    Curvature_Quark_F2H1[6][9][3] = 2*std::sqrt(2)*Yu(3,2);
+    Curvature_Quark_F2H1[6][9][4] = (-2.0*II)*std::sqrt(2)*Yu(3,2);
+    Curvature_Quark_F2H1[6][11][1] = -2*std::sqrt(2)*Yu(3,2);
+    Curvature_Quark_F2H1[6][11][2] = (2.0*II)*std::sqrt(2)*Yu(3,2);
+    Curvature_Quark_F2H1[7][2][1] = -2*std::sqrt(2)*Yu(2,1);
+    Curvature_Quark_F2H1[7][2][2] = (2.0*II)*std::sqrt(2)*Yu(2,1);
+    Curvature_Quark_F2H1[7][4][3] = 2*std::sqrt(2)*Yd(2,1);
+    Curvature_Quark_F2H1[7][4][4] = (2.0*II)*std::sqrt(2)*Yd(2,1);
+    Curvature_Quark_F2H1[7][6][1] = -2*std::sqrt(2)*Yu(2,2);
+    Curvature_Quark_F2H1[7][6][2] = (2.0*II)*std::sqrt(2)*Yu(2,2);
+    Curvature_Quark_F2H1[7][8][3] = 2*std::sqrt(2)*Yd(2,2);
+    Curvature_Quark_F2H1[7][8][4] = (2.0*II)*std::sqrt(2)*Yd(2,2);
+    Curvature_Quark_F2H1[7][10][1] = -2*std::sqrt(2)*Yu(2,3);
+    Curvature_Quark_F2H1[7][10][2] = (2.0*II)*std::sqrt(2)*Yu(2,3);
+    Curvature_Quark_F2H1[7][12][3] = 2*std::sqrt(2)*Yd(2,3);
+    Curvature_Quark_F2H1[7][12][4] = (2.0*II)*std::sqrt(2)*Yd(2,3);
+    Curvature_Quark_F2H1[8][1][1] = 2*std::sqrt(2)*Yd(1,2);
+    Curvature_Quark_F2H1[8][1][2] = (2.0*II)*std::sqrt(2)*Yd(1,2);
+    Curvature_Quark_F2H1[8][3][3] = 2*std::sqrt(2)*Yd(1,2);
+    Curvature_Quark_F2H1[8][3][4] = (2.0*II)*std::sqrt(2)*Yd(1,2);
+    Curvature_Quark_F2H1[8][5][1] = 2*std::sqrt(2)*Yd(2,2);
+    Curvature_Quark_F2H1[8][5][2] = (2.0*II)*std::sqrt(2)*Yd(2,2);
+    Curvature_Quark_F2H1[8][7][3] = 2*std::sqrt(2)*Yd(2,2);
+    Curvature_Quark_F2H1[8][7][4] = (2.0*II)*std::sqrt(2)*Yd(2,2);
+    Curvature_Quark_F2H1[8][9][1] = 2*std::sqrt(2)*Yd(3,2);
+    Curvature_Quark_F2H1[8][9][2] = (2.0*II)*std::sqrt(2)*Yd(3,2);
+    Curvature_Quark_F2H1[8][11][3] = 2*std::sqrt(2)*Yd(3,2);
+    Curvature_Quark_F2H1[8][11][4] = (2.0*II)*std::sqrt(2)*Yd(3,2);
+    Curvature_Quark_F2H1[9][2][3] = 2*std::sqrt(2)*Yu(3,1);
+    Curvature_Quark_F2H1[9][2][4] = (-2.0*II)*std::sqrt(2)*Yu(3,1);
+    Curvature_Quark_F2H1[9][4][1] = 2*std::sqrt(2)*Yd(3,1);
+    Curvature_Quark_F2H1[9][4][2] = (2.0*II)*std::sqrt(2)*Yd(3,1);
+    Curvature_Quark_F2H1[9][6][3] = 2*std::sqrt(2)*Yu(3,2);
+    Curvature_Quark_F2H1[9][6][4] = (-2.0*II)*std::sqrt(2)*Yu(3,2);
+    Curvature_Quark_F2H1[9][8][1] = 2*std::sqrt(2)*Yd(3,2);
+    Curvature_Quark_F2H1[9][8][2] = (2.0*II)*std::sqrt(2)*Yd(3,2);
+    Curvature_Quark_F2H1[9][10][3] = 2*std::sqrt(2)*Yu(3,3);
+    Curvature_Quark_F2H1[9][10][4] = (-2.0*II)*std::sqrt(2)*Yu(3,3);
+    Curvature_Quark_F2H1[9][12][1] = 2*std::sqrt(2)*Yd(3,3);
+    Curvature_Quark_F2H1[9][12][2] = (2.0*II)*std::sqrt(2)*Yd(3,3);
+    Curvature_Quark_F2H1[10][1][3] = 2*std::sqrt(2)*Yu(1,3);
+    Curvature_Quark_F2H1[10][1][4] = (-2.0*II)*std::sqrt(2)*Yu(1,3);
+    Curvature_Quark_F2H1[10][3][1] = -2*std::sqrt(2)*Yu(1,3);
+    Curvature_Quark_F2H1[10][3][2] = (2.0*II)*std::sqrt(2)*Yu(1,3);
+    Curvature_Quark_F2H1[10][5][3] = 2*std::sqrt(2)*Yu(2,3);
+    Curvature_Quark_F2H1[10][5][4] = (-2.0*II)*std::sqrt(2)*Yu(2,3);
+    Curvature_Quark_F2H1[10][7][1] = -2*std::sqrt(2)*Yu(2,3);
+    Curvature_Quark_F2H1[10][7][2] = (2.0*II)*std::sqrt(2)*Yu(2,3);
+    Curvature_Quark_F2H1[10][9][3] = 2*std::sqrt(2)*Yu(3,3);
+    Curvature_Quark_F2H1[10][9][4] = (-2.0*II)*std::sqrt(2)*Yu(3,3);
+    Curvature_Quark_F2H1[10][11][1] = -2*std::sqrt(2)*Yu(3,3);
+    Curvature_Quark_F2H1[10][11][2] = (2.0*II)*std::sqrt(2)*Yu(3,3);
+    Curvature_Quark_F2H1[11][2][1] = -2*std::sqrt(2)*Yu(3,1);
+    Curvature_Quark_F2H1[11][2][2] = (2.0*II)*std::sqrt(2)*Yu(3,1);
+    Curvature_Quark_F2H1[11][4][3] = 2*std::sqrt(2)*Yd(3,1);
+    Curvature_Quark_F2H1[11][4][4] = (2.0*II)*std::sqrt(2)*Yd(3,1);
+    Curvature_Quark_F2H1[11][6][1] = -2*std::sqrt(2)*Yu(3,2);
+    Curvature_Quark_F2H1[11][6][2] = (2.0*II)*std::sqrt(2)*Yu(3,2);
+    Curvature_Quark_F2H1[11][8][3] = 2*std::sqrt(2)*Yd(3,2);
+    Curvature_Quark_F2H1[11][8][4] = (2.0*II)*std::sqrt(2)*Yd(3,2);
+    Curvature_Quark_F2H1[11][10][1] = -2*std::sqrt(2)*Yu(3,3);
+    Curvature_Quark_F2H1[11][10][2] = (2.0*II)*std::sqrt(2)*Yu(3,3);
+    Curvature_Quark_F2H1[11][12][3] = 2*std::sqrt(2)*Yd(3,3);
+    Curvature_Quark_F2H1[11][12][4] = (2.0*II)*std::sqrt(2)*Yd(3,3);
+    Curvature_Quark_F2H1[12][1][1] = 2*std::sqrt(2)*Yd(1,3);
+    Curvature_Quark_F2H1[12][1][2] = (2.0*II)*std::sqrt(2)*Yd(1,3);
+    Curvature_Quark_F2H1[12][3][3] = 2*std::sqrt(2)*Yd(1,3);
+    Curvature_Quark_F2H1[12][3][4] = (2.0*II)*std::sqrt(2)*Yd(1,3);
+    Curvature_Quark_F2H1[12][5][1] = 2*std::sqrt(2)*Yd(2,3);
+    Curvature_Quark_F2H1[12][5][2] = (2.0*II)*std::sqrt(2)*Yd(2,3);
+    Curvature_Quark_F2H1[12][7][3] = 2*std::sqrt(2)*Yd(2,3);
+    Curvature_Quark_F2H1[12][7][4] = (2.0*II)*std::sqrt(2)*Yd(2,3);
+    Curvature_Quark_F2H1[12][9][1] = 2*std::sqrt(2)*Yd(3,3);
+    Curvature_Quark_F2H1[12][9][2] = (2.0*II)*std::sqrt(2)*Yd(3,3);
+    Curvature_Quark_F2H1[12][11][3] = 2*std::sqrt(2)*Yd(3,3);
+    Curvature_Quark_F2H1[12][11][4] = (2.0*II)*std::sqrt(2)*Yd(3,3);
+
+    SetCurvatureDone=true;
 
 }
 
 
-void Class_Template::MinimizeOrderVEV(const std::vector<double>& vevMinimizer, std::vector<double>& vevFunction){
+void Class_Potential_SMRSS::MinimizeOrderVEV(const std::vector<double>& vevMinimizer, std::vector<double>& vevFunction){
   /*
    * Here you do the conversion from the result vector from the minimizer (which has nVEV entries) to a
    * vector with NHiggs entries which you can use to call the member functions
@@ -388,7 +742,8 @@ void Class_Template::MinimizeOrderVEV(const std::vector<double>& vevMinimizer, s
 
 	VevOrder.resize(nVEV);
 	// Here you have to tell which scalar field gets which VEV.
-	VevOrder[0] = 0;
+	VevOrder[0] = 2;
+	VevOrder[1] = 4;
 
 	int count=0;
 	if(vevFunction.size() != 0)
@@ -414,7 +769,7 @@ void Class_Template::MinimizeOrderVEV(const std::vector<double>& vevMinimizer, s
 		 }
 	}
 }
-bool Class_Template::CalculateDebyeSimplified(){
+bool Class_Potential_SMRSS::CalculateDebyeSimplified(){
   return false;
   /*
    * Use this function if you calculated the Debye corrections to the Higgs mass matrix and implement
@@ -422,7 +777,7 @@ bool Class_Template::CalculateDebyeSimplified(){
    */
 }
 
-bool Class_Template::CalculateDebyeGaugeSimplified()
+bool Class_Potential_SMRSS::CalculateDebyeGaugeSimplified()
 {
 	bool Debug = false;
   if(Debug) std::cout << "Debug turned on in Class_Template :: " << __func__ << std::endl;
@@ -435,7 +790,7 @@ bool Class_Template::CalculateDebyeGaugeSimplified()
 
   return false;
 }
-double Class_Template::VTreeSimplified(const std::vector<double>& v){
+double Class_Potential_SMRSS::VTreeSimplified(const std::vector<double>& v){
 	UseVTreeSimplified = false;
 	UseVTreeSimplified = true; // To use the simplified version
 	double res = 0;
@@ -446,7 +801,7 @@ double Class_Template::VTreeSimplified(const std::vector<double>& v){
 	return res;
 }
 
-double Class_Template::VCounterSimplified(const std::vector<double>& v)
+double Class_Potential_SMRSS::VCounterSimplified(const std::vector<double>& v)
 {
 	UseVCounterSimplified = false;
 	UseVCounterSimplified = true; // To use the simplified version
@@ -457,6 +812,6 @@ double Class_Template::VCounterSimplified(const std::vector<double>& v)
 	return res;
 }
 
-void Class_Template::Debugging(const std::vector<double>& input, std::vector<double>& output){
+void Class_Potential_SMRSS::Debugging(const std::vector<double>& input, std::vector<double>& output){
 
 }

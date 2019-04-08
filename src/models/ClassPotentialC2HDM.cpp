@@ -1658,15 +1658,12 @@ Curvature_Higgs_L2[7][7] = u2;
     YIJR2(0,9) = -std::conj(V11) * C_MassUp / v2;
     YIJR2(0,10) = -std::conj(V12) * C_MassUp / v2;
     YIJR2(0,11) = -std::conj(V13) * C_MassUp / v2;
-
     YIJR2(1,9) = -std::conj(V21) * C_MassCharm / v2;
     YIJR2(1,10) = -std::conj(V22) * C_MassCharm / v2;
     YIJR2(1,11) = -std::conj(V23) * C_MassCharm / v2;
-
     YIJR2(2,9) = -std::conj(V31) * C_MassTop / v2;
     YIJR2(2,10) = -std::conj(V32) * C_MassTop / v2;
     YIJR2(2,11) = -std::conj(V33) * C_MassTop / v2;
-
 
 
     YIJS2(0,6) = C_MassUp / v2;

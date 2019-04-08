@@ -22,12 +22,12 @@
 
 #include "ClassPotentialOrigin.h"
 
-class Class_Template : public Class_Potential_Origin
+class Class_Potential_SMRSS : public Class_Potential_Origin
 {
 public:
-  Class_Template ();
+    Class_Potential_SMRSS ();
   virtual
-  ~Class_Template ();
+  ~Class_Potential_SMRSS ();
 
 
   // Add here your parameters for the Lagrangian as well as for the counterterm potential

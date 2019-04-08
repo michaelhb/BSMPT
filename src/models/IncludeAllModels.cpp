@@ -21,6 +21,7 @@
 #include "ClassPotentialR2HDM.h"
 #include "ClassPotentialC2HDM.h"
 #include "ClassPotentialRN2HDM.h"
+#include "ClassPotentialSMRSS.h"
 
 
 /**
@@ -40,6 +41,9 @@ std::unique_ptr<Class_Potential_Origin> FChoose(int choice){
 	else if(choice == C_ModelRN2HDM){
 		return std::unique_ptr<Class_Potential_Origin> { new Class_Potential_RN2HDM};
 	}
+    else if(choice == C_ModelSMRSS){
+        return std::unique_ptr<Class_Potential_Origin> { new Class_Potential_SMRSS};
+    }
 //	else if(choice == C_ModelTemplate)
 //	{
 //		return std::unique_ptr<Class_Potential_Origin> { new Class_Template };

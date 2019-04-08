@@ -34,6 +34,7 @@
 const int C_ModelC2HDM = 0;
 const int C_ModelR2HDM = 1;
 const int C_ModelRN2HDM = 2;
+const int C_ModelSMRSS = 3;
 const int C_ModelTemplate=5;
 
 
