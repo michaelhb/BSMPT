@@ -127,20 +127,20 @@ void Class_Potential_SMRSS::ReadAndSet(const std::string& linestr, std::vector<d
 	std::stringstream ss(linestr);
 	double tmp;
 
-	double lmu_hs, lmu_s, llambda_s, llambda_m;
+	double llambda_h, llambda_s, llambda_m, vs;
 
 	for(int k=1;k<=4;k++)
 	{
 	      ss>>tmp;
-	      if(k==1) lmu_hs = tmp;
-	      else if (k==2) lmu_s = tmp;
-	      else if (k==3) llambda_s = tmp;
-	      else if (k==4) llambda_m = tmp;
+	      if(k==1) llambda_h = tmp;
+	      else if (k==2) llambda_s = tmp;
+	      else if (k==3) llambda_m = tmp;
+	      else if (k==4) vs = tmp;
 	}
-	par[0] = lmu_hs;
-	par[1] = lmu_s;
-	par[2] = llambda_s;
-	par[3] = llambda_m;
+	par[0] = llambda_h;
+	par[1] = llambda_s;
+	par[2] = llambda_m;
+	par[3] = vs;
 
 
 	set_gen(par); // This you have to call so that everything will be set
@@ -154,13 +154,14 @@ void Class_Potential_SMRSS::ReadAndSet(const std::string& linestr, std::vector<d
 void Class_Potential_SMRSS::set_gen(const std::vector<double>& par) {
 
     // direct input params
-    mu_hs = par[0];
-    mu_s = par[1];
-    lambda_s = par[2];
-    lambda_m = par[3];
+    lambda_h = par[0];
+    lambda_s = par[1];
+    lambda_m = par[2];
+    vs = par[3];
 
-    // EWSB condition eliminates lambda_h:
-    lambda_h = (2.0*mu_hs)/(std::pow(C_vev0,2));
+    // EWSB conditions eliminate mu_hs, mu_s:
+    mu_hs = 0.5*(std::pow(C_vev0,2)*lambda_h + std::pow(vs,2)*lambda_m);
+    mu_s = 0.25*((-1.0)*std::pow(C_vev0,2)*lambda_m - 4*std::pow(vs,2)*lambda_s);
 
     // This sets the renormalization scale
 	scale = C_vev0;
@@ -315,14 +316,7 @@ void Class_Potential_SMRSS::calc_CT(std::vector<double>& par){
 	}
 
 	// Here you have to use your formulas for the counterterm scheme
-	double t = 0;
-	dT = t;
-	dlambda = 3.0*t/std::pow(C_vev0,3) + 3.0/std::pow(C_vev0,3) * NablaWeinberg(0) -3.0/std::pow(C_vev0,2) *HesseWeinberg(0,0);
-	dms = -3.0/(2*std::pow(C_vev0,2)) *NablaWeinberg(0) + 1.0/2.0 *HesseWeinberg(0,0) -3.0*t/(2*C_vev0);
 
-	par[0] = dT;
-	par[1] = dlambda;
-	par[2] = dms;
 
 	set_CT_Pot_Par(par);
 
