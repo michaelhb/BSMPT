@@ -33,7 +33,7 @@ public:
   // Add here your parameters for the Lagrangian as well as for the counterterm potential
   // Add here your variables in which you will save the Debye correction factors
 
-    double mu_hs, lambda_h, mu_s, lambda_s, lambda_m, dmu_hs, dlambda_h, dmu_s, dlambda_s, dlambda_m, dT3, dT5;
+    double mu_hs, lambda_h, mu_s, lambda_s, lambda_m, Dmu_hs, Dlambda_h, Dmu_s, Dlambda_s, Dlambda_m, DT3, DT5;
 
 
 
