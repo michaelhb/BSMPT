@@ -3,6 +3,7 @@ add_library(Models
   ClassPotentialOrigin.cpp
   ClassPotentialR2HDM.cpp
   ClassPotentialRN2HDM.cpp
+  ClassPotentialSMRSS.cpp
   ClassTemplate.cpp
   IncludeAllModels.cpp
 )
