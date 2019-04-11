@@ -55,7 +55,7 @@ Class_Potential_SMRSS::~Class_Potential_SMRSS ()
  * complement the legend of the given input file
  */
 std::string Class_Potential_SMRSS::addLegendCT(){
-  std::string out = "dT\tdlambda\tdmsquared";
+  std::string out = "Dmu_hs\tDlambda_h\tDmu_s\tDlambda_s\tDlambda_m\tDT3\tDT5\t";
   return out;
 }
 
@@ -64,9 +64,7 @@ std::string Class_Potential_SMRSS::addLegendCT(){
  * complement the legend of the given input file
  */
 std::string Class_Potential_SMRSS::addLegendTemp(){
-  std::string out = "T_c\tv_c";
-  //out += "Your VEV order";
-  out += "omega";
+  std::string out = "T_c\tv_c\tv\tvs";
   return out;
 }
 
@@ -115,7 +113,7 @@ std::string Class_Potential_SMRSS::addLegendTripleCouplings(){
 std::string Class_Potential_SMRSS::addLegendVEV(){
 	std::string out;
 	//out = "Your VEV order";
-	out = "omega";
+	out = "v\tvs";
   return out;
 }
 
@@ -275,14 +273,23 @@ void Class_Potential_SMRSS::set_CT_Pot_Par(const std::vector<double>& par){
  */
 void Class_Potential_SMRSS::write() {
 
-	std::cout << "The parameters are : " << std::endl;
-	std::cout << "lambda = " << lambda << std::endl
-			<< "\tm^2 = " << ms << std::endl;
+	std::cout << "The input parameters are : " << std::endl;
+	std::cout << "lambda_h = " << lambda_h << std::endl
+			  << "lambda_m = " << lambda_m << std::endl
+			  << "lambda_s = " << lambda_s << std::endl
+			  << "vs = " << vs << std::endl;
+
+	std::cout << "EWSB + input parameters gives : " << std::endl;
+	std::cout << "mu_hs = " << mu_hs << std::endl
+	          << "mu_s = " << mu_s << std::endl;
 
 	std::cout << "The counterterm parameters are : " << std::endl;
-	std::cout << "dT = "<< dT << std::endl
-			<< "dlambda = " << dlambda << std::endl
-			<< "dm^2 = "<< dms << std::endl;
+	std::cout << "Dmu_hs = " << Dmu_hs << std::endl
+	          << "Dlambda_h = " << Dlambda_h << std::endl
+	          << "Dmu_s = " << Dmu_s << std::endl
+	          << "Dlambda_s" << Dlambda_s << std::endl
+	          << "DT3 " << DT3 << std::endl
+	          << "DT5" << DT5 << std::endl;
 
 	std::cout << "The scale is given by mu = " << scale << " GeV " << std::endl;
 
@@ -307,22 +314,37 @@ void Class_Potential_SMRSS::calc_CT(std::vector<double>& par){
 
 	if(Debug) std::cout << "Finished Derivatives " << std::endl;
 
-	VectorXd NablaWeinberg(NHiggs);
-	MatrixXd HesseWeinberg(NHiggs,NHiggs),HiggsRot(NHiggs,NHiggs);
+	VectorXd Deriv1(NHiggs);
+	MatrixXd Deriv2(NHiggs,NHiggs),HiggsRot(NHiggs,NHiggs);
 	for(int i=0;i<NHiggs;i++)
 	{
-		NablaWeinberg[i] = WeinbergNabla[i];
-		for(int j=0;j<NHiggs;j++) HesseWeinberg(i,j) = WeinbergHesse.at(j*NHiggs+i);
+		Deriv1[i] = WeinbergNabla[i];
+		for(int j=0;j<NHiggs;j++) Deriv2(i,j) = WeinbergHesse.at(j*NHiggs+i);
 	}
 
-	// Here you have to use your formulas for the counterterm scheme
+	double freepar1 = 0;
+	double freepar2 = 0;
 
+	// Here you have to use your formulas for the counterterm scheme
+    Dmu_hs = -(1.0/C_vev0)*(-3*Deriv1(2) + vs*Deriv2(2,4) + C_vev0*Deriv2(2,2));
+	Dlambda_h = -(2.0/std::pow(C_vev0,3))*(-Deriv1(2) + C_vev0*Deriv2(2,2));
+	Dmu_s = -(1.0/(2.0*vs))*(3*Deriv1(4) - C_vev0*Deriv2(2,2) - C_vev0*Deriv2(2,4));
+	Dlambda_s = -(1.0/(2.0*std::pow(vs,3)))*(-Deriv1(4) + vs*Deriv2(4,4));
+	Dlambda_m = -(2.0/(C_vev0*vs))*Deriv2(2,4);
+	DT3 = freepar1;
+	DT5 = freepar2;
+
+	par[0] = Dmu_hs;
+	par[1] = Dlambda_h;
+	par[2] = Dmu_s;
+	par[3] = Dlambda_s;
+	par[4] = Dlambda_m;
+	par[5] = DT3;
+	par[6] = DT5;
 
 	set_CT_Pot_Par(par);
 
 }
-
-
 
 
 void Class_Potential_SMRSS::TripleHiggsCouplings()
@@ -426,6 +448,7 @@ void Class_Potential_SMRSS::TripleHiggsCouplings()
 
 
 }
+
 
 void Class_Potential_SMRSS::SetCurvatureArrays(){
   /*
