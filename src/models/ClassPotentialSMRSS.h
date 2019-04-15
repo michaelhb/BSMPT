@@ -33,10 +33,15 @@ public:
   // Add here your parameters for the Lagrangian as well as for the counterterm potential
   // Add here your variables in which you will save the Debye correction factors
 
-    double vs, mu_hs, lambda_h, mu_s, lambda_s, lambda_m,
-           Dmu_hs, Dlambda_h, Dmu_s, Dlambda_s, Dlambda_m, DT3, DT5;
+    // Input params
+    double cos_theta, vs, MS, lambdas, kappa; // NB MS is the mass basis singlet mass
 
+    // Other lagrangian parameters
+    double muSq, lambda, Mssq, kappa1, kappa2; // And Mssq is the squared singlet mass in the gauge basis
 
+    // Counterterm parameters
+    double DmuSq, Dlambda, DMssq, Dkappa1, Dkappa2, Dkappa, Dlambdas,
+            DT3, DT5;
 
 
     void ReadAndSet(const std::string& linestr, std::vector<double>& par);

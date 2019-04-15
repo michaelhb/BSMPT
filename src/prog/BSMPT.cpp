@@ -49,7 +49,8 @@ int main(int argc, char *argv[]) try{
 		std::cout << "The implemented models are \n"
 				<< "0 : C2HDM\n"
 				<< "1 : R2HDM\n"
-				<< "2 : N2HDM"
+				<< "2 : N2HDM\n"
+				<< "3 : SMRSS"
 				<< std::endl;
 		return EXIT_FAILURE;
 	}
