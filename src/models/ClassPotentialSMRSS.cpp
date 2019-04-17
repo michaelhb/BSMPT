@@ -168,7 +168,7 @@ void Class_Potential_SMRSS::set_gen(const std::vector<double>& par) {
     double sin_2_theta = 2.0*sin_theta*cos_theta;
 
     double MS2 = std::pow(MS,2);
-    double MH2 = std::pow(C_vev0,2);
+    double MH2 = std::pow(C_MassSMHiggs,2);
 
     lambda = ((2.0)/std::pow(C_vev0,2))*(
       MH2*std::pow(cos_theta,2) +
