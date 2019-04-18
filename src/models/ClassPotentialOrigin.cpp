@@ -761,10 +761,11 @@ void Class_Potential_Origin::CalculatePhysicalCouplings()
     if(Debug) std::cout << "Set" << std::endl;
 
 
-    MatrixXd HiggsRot(NHiggs,NHiggs),GaugeRot(NGauge,NGauge),QuarkRot(NQuarks,NQuarks),LepRot(NLepton,NLepton);
+    MatrixXd HiggsRot(NHiggs,NHiggs),GaugeRot(NGauge,NGauge),LepRot(NLepton,NLepton);
+    MatrixXcd QuarkRot(NQuarks,NQuarks);
     HiggsRot = MatrixXd::Identity(NHiggs,NHiggs);
     GaugeRot = MatrixXd::Identity(NGauge,NGauge);
-    QuarkRot = MatrixXd::Identity(NQuarks,NQuarks);
+    QuarkRot = MatrixXcd::Identity(NQuarks,NQuarks);
     LepRot = MatrixXd::Identity(NLepton,NLepton);
 
     SelfAdjointEigenSolver<MatrixXd> es;
@@ -801,7 +802,9 @@ void Class_Potential_Origin::CalculatePhysicalCouplings()
     }
     else{
         SelfAdjointEigenSolver<MatrixXcd> es(MassQuark);
-        QuarkRot = es.eigenvalues().transpose();
+        // Is this a bug?
+        //QuarkRot = es.eigenvalues().transpose();
+        QuarkRot = es.eigenvectors().transpose();
         for(int i=0;i<NQuarks;i++) MassSquaredQuark[i] = es.eigenvalues().real()[i];
     }
 
@@ -1227,7 +1230,8 @@ void Class_Potential_Origin::CalculatePhysicalCouplings()
                         {
                             for(int is=0;is<NHiggs;is++)
                             {
-                                double RotFac = QuarkRot(a,as)*QuarkRot(b,bs)*HiggsRot(i,is);
+                                // double RotFac = QuarkRot(a,as)*QuarkRot(b,bs)*HiggsRot(i,is);
+                                std::complex<double> RotFac = QuarkRot(a,as)*QuarkRot(b,bs)*HiggsRot(i,is);
                                 Couplings_Quark_Higgs_21[a][b][i] += RotFac*LambdaQuark_3[as][bs][is];
                             }
                         }
@@ -1243,7 +1247,8 @@ void Class_Potential_Origin::CalculatePhysicalCouplings()
                                 {
                                     for(int js=0;js<NHiggs;js++)
                                     {
-                                        double RotFac = QuarkRot(a,as)*QuarkRot(b,bs)*HiggsRot(i,is)*HiggsRot(j,js);
+                                        // double RotFac = QuarkRot(a,as)*QuarkRot(b,bs)*HiggsRot(i,is)*HiggsRot(j,js);
+                                        std::complex<double> RotFac = QuarkRot(a,as)*QuarkRot(b,bs)*HiggsRot(i,is)*HiggsRot(j,js);
                                         Couplings_Quark_Higgs_22[a][b][i][j] += RotFac*LambdaQuark_4[as][bs][is][js];
                                     }
                                 }

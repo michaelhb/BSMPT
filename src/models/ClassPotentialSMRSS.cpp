@@ -507,9 +507,9 @@ void Class_Potential_SMRSS::SetCurvatureArrays(){
    *  as described in the potential in the paper.
    */
 
-	initVectors();
+    initVectors();
 
-	for(int i=0;i<NHiggs;i++) HiggsVev[i] = vevTree[i];
+    for(int i=0;i<NHiggs;i++) HiggsVev[i] = vevTree[i];
 
     // Set up Yukawa couplings for weak eigenbasis
     Matrix3cd ckm, Mu, Md, Me, Yu, Yd, Ye;
