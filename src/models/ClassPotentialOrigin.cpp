@@ -830,7 +830,7 @@ void Class_Potential_Origin::CalculatePhysicalCouplings()
 
 
     // Higgs kopplungen aus tensoren zusammensetzen
-
+    double testest = C_g;
     for(int a=0;a<NGauge;a++)
     {
         for(int b=0;b<NGauge;b++)
