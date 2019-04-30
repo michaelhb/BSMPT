@@ -169,19 +169,23 @@ void Class_Potential_SMRSS::set_gen(const std::vector<double>& par) {
 
     double MS2 = std::pow(MS,2);
     double MH2 = std::pow(C_MassSMHiggs,2);
+    /*
+    {\[Lambda]->(MH2 Cos[\[Theta]]^2+MS2 Sin[\[Theta]]^2)/v^2,
+     Subscript[\[Kappa], 1]->(vs (-MH2-MS2+2 vs (\[Kappa]+4 vs \[Lambda]s)+(MH2-MS2) Cos[2 \[Theta]]))/v^2,
+     Subscript[\[Kappa], 2]->(2 vs (MH2+MS2-2 vs (\[Kappa]+4 vs \[Lambda]s)+(-MH2+MS2) Cos[2 \[Theta]])+(MH2-MS2) v Sin[2 \[Theta]])/(2 v^2 vs)}
+    */
 
-    lambda = ((2.0)/std::pow(C_vev0,2))*(
-      MH2*std::pow(cos_theta,2) +
-      MS2*std::pow(sin_theta,2));
+    lambda = (1.0/std::pow(C_vev0,2))*(MH2*std::pow(cos_theta,2) + MS2*std::pow(sin_theta,2));
 
-    kappa1 = ((2.0*vs)/std::pow(C_vev0,2))*(
-      (-1.0)*(MS2 + MH2) +
-      vs*(kappa + 4.0*vs*lambdas) +
-      (MH2 - MS2)*cos_2_theta);
+    kappa1 = (vs/std::pow(C_vev0,2))*(
+      -1.0*(MH2 + MS2) + 2*vs*(kappa + 4.0*vs*lambdas) +
+      (MH2 - MS2)*cos_2_theta
+    );
 
     kappa2 = ((1.0)/(2*std::pow(C_vev0,2)*vs))*(
-      4*vs*(MH2 + MS2 - vs*(kappa + 4*vs*lambdas) + (MS2 - MH2)*cos_2_theta) +
-      (MH2 - MS2)*C_vev0*sin_2_theta);
+      2.0*vs*(MH2 + MS2 - 2.0*vs*(kappa + 4.0*vs*lambdas) + (MS2 - MH2)*cos_2_theta) +
+      (MH2 - MS2)*C_vev0*sin_2_theta
+    );
 
     muSq = (-0.5)*(std::pow(C_vev0,2)*lambda + 2.0*vs*kappa1 + std::pow(vs,2)*kappa2);
 
@@ -228,84 +232,84 @@ void Class_Potential_SMRSS::set_CT_Pot_Par(const std::vector<double>& par){
   Curvature_Higgs_CT_L2[3][3] = DmuSq;
   Curvature_Higgs_CT_L2[4][4] = DMssq;
 
-  Curvature_Higgs_CT_L3[0][0][4] = 3*Dkappa1;
-  Curvature_Higgs_CT_L3[0][4][0] = 3*Dkappa1;
-  Curvature_Higgs_CT_L3[1][1][4] = 3*Dkappa1;
-  Curvature_Higgs_CT_L3[1][4][1] = 3*Dkappa1;
-  Curvature_Higgs_CT_L3[2][2][4] = 3*Dkappa1;
-  Curvature_Higgs_CT_L3[2][4][2] = 3*Dkappa1;
-  Curvature_Higgs_CT_L3[3][3][4] = 3*Dkappa1;
-  Curvature_Higgs_CT_L3[3][4][3] = 3*Dkappa1;
-  Curvature_Higgs_CT_L3[4][0][0] = 3*Dkappa1;
-  Curvature_Higgs_CT_L3[4][1][1] = 3*Dkappa1;
-  Curvature_Higgs_CT_L3[4][2][2] = 3*Dkappa1;
-  Curvature_Higgs_CT_L3[4][3][3] = 3*Dkappa1;
+  Curvature_Higgs_CT_L3[0][0][4] = Dkappa1;
+  Curvature_Higgs_CT_L3[0][4][0] = Dkappa1;
+  Curvature_Higgs_CT_L3[1][1][4] = Dkappa1;
+  Curvature_Higgs_CT_L3[1][4][1] = Dkappa1;
+  Curvature_Higgs_CT_L3[2][2][4] = Dkappa1;
+  Curvature_Higgs_CT_L3[2][4][2] = Dkappa1;
+  Curvature_Higgs_CT_L3[3][3][4] = Dkappa1;
+  Curvature_Higgs_CT_L3[3][4][3] = Dkappa1;
+  Curvature_Higgs_CT_L3[4][0][0] = Dkappa1;
+  Curvature_Higgs_CT_L3[4][1][1] = Dkappa1;
+  Curvature_Higgs_CT_L3[4][2][2] = Dkappa1;
+  Curvature_Higgs_CT_L3[4][3][3] = Dkappa1;
   Curvature_Higgs_CT_L3[4][4][4] = 2*Dkappa;
 
   Curvature_Higgs_CT_L4[0][0][0][0] = 3*Dlambda;
-  Curvature_Higgs_CT_L4[0][0][1][1] = 6*Dlambda;
-  Curvature_Higgs_CT_L4[0][0][2][2] = 6*Dlambda;
-  Curvature_Higgs_CT_L4[0][0][3][3] = 6*Dlambda;
-  Curvature_Higgs_CT_L4[0][0][4][4] = 6*Dkappa2;
-  Curvature_Higgs_CT_L4[0][1][0][1] = 6*Dlambda;
-  Curvature_Higgs_CT_L4[0][1][1][0] = 6*Dlambda;
-  Curvature_Higgs_CT_L4[0][2][0][2] = 6*Dlambda;
-  Curvature_Higgs_CT_L4[0][2][2][0] = 6*Dlambda;
-  Curvature_Higgs_CT_L4[0][3][0][3] = 6*Dlambda;
-  Curvature_Higgs_CT_L4[0][3][3][0] = 6*Dlambda;
-  Curvature_Higgs_CT_L4[0][4][0][4] = 6*Dkappa2;
-  Curvature_Higgs_CT_L4[0][4][4][0] = 6*Dkappa2;
-  Curvature_Higgs_CT_L4[1][0][0][1] = 6*Dlambda;
-  Curvature_Higgs_CT_L4[1][0][1][0] = 6*Dlambda;
-  Curvature_Higgs_CT_L4[1][1][0][0] = 6*Dlambda;
+  Curvature_Higgs_CT_L4[0][0][1][1] = Dlambda;
+  Curvature_Higgs_CT_L4[0][0][2][2] = Dlambda;
+  Curvature_Higgs_CT_L4[0][0][3][3] = Dlambda;
+  Curvature_Higgs_CT_L4[0][0][4][4] = Dkappa2;
+  Curvature_Higgs_CT_L4[0][1][0][1] = Dlambda;
+  Curvature_Higgs_CT_L4[0][1][1][0] = Dlambda;
+  Curvature_Higgs_CT_L4[0][2][0][2] = Dlambda;
+  Curvature_Higgs_CT_L4[0][2][2][0] = Dlambda;
+  Curvature_Higgs_CT_L4[0][3][0][3] = Dlambda;
+  Curvature_Higgs_CT_L4[0][3][3][0] = Dlambda;
+  Curvature_Higgs_CT_L4[0][4][0][4] = Dkappa2;
+  Curvature_Higgs_CT_L4[0][4][4][0] = Dkappa2;
+  Curvature_Higgs_CT_L4[1][0][0][1] = Dlambda;
+  Curvature_Higgs_CT_L4[1][0][1][0] = Dlambda;
+  Curvature_Higgs_CT_L4[1][1][0][0] = Dlambda;
   Curvature_Higgs_CT_L4[1][1][1][1] = 3*Dlambda;
-  Curvature_Higgs_CT_L4[1][1][2][2] = 6*Dlambda;
-  Curvature_Higgs_CT_L4[1][1][3][3] = 6*Dlambda;
-  Curvature_Higgs_CT_L4[1][1][4][4] = 6*Dkappa2;
-  Curvature_Higgs_CT_L4[1][2][1][2] = 6*Dlambda;
-  Curvature_Higgs_CT_L4[1][2][2][1] = 6*Dlambda;
-  Curvature_Higgs_CT_L4[1][3][1][3] = 6*Dlambda;
-  Curvature_Higgs_CT_L4[1][3][3][1] = 6*Dlambda;
-  Curvature_Higgs_CT_L4[1][4][1][4] = 6*Dkappa2;
-  Curvature_Higgs_CT_L4[1][4][4][1] = 6*Dkappa2;
-  Curvature_Higgs_CT_L4[2][0][0][2] = 6*Dlambda;
-  Curvature_Higgs_CT_L4[2][0][2][0] = 6*Dlambda;
-  Curvature_Higgs_CT_L4[2][1][1][2] = 6*Dlambda;
-  Curvature_Higgs_CT_L4[2][1][2][1] = 6*Dlambda;
-  Curvature_Higgs_CT_L4[2][2][0][0] = 6*Dlambda;
-  Curvature_Higgs_CT_L4[2][2][1][1] = 6*Dlambda;
+  Curvature_Higgs_CT_L4[1][1][2][2] = Dlambda;
+  Curvature_Higgs_CT_L4[1][1][3][3] = Dlambda;
+  Curvature_Higgs_CT_L4[1][1][4][4] = Dkappa2;
+  Curvature_Higgs_CT_L4[1][2][1][2] = Dlambda;
+  Curvature_Higgs_CT_L4[1][2][2][1] = Dlambda;
+  Curvature_Higgs_CT_L4[1][3][1][3] = Dlambda;
+  Curvature_Higgs_CT_L4[1][3][3][1] = Dlambda;
+  Curvature_Higgs_CT_L4[1][4][1][4] = Dkappa2;
+  Curvature_Higgs_CT_L4[1][4][4][1] = Dkappa2;
+  Curvature_Higgs_CT_L4[2][0][0][2] = Dlambda;
+  Curvature_Higgs_CT_L4[2][0][2][0] = Dlambda;
+  Curvature_Higgs_CT_L4[2][1][1][2] = Dlambda;
+  Curvature_Higgs_CT_L4[2][1][2][1] = Dlambda;
+  Curvature_Higgs_CT_L4[2][2][0][0] = Dlambda;
+  Curvature_Higgs_CT_L4[2][2][1][1] = Dlambda;
   Curvature_Higgs_CT_L4[2][2][2][2] = 3*Dlambda;
-  Curvature_Higgs_CT_L4[2][2][3][3] = 6*Dlambda;
-  Curvature_Higgs_CT_L4[2][2][4][4] = 6*Dkappa2;
-  Curvature_Higgs_CT_L4[2][3][2][3] = 6*Dlambda;
-  Curvature_Higgs_CT_L4[2][3][3][2] = 6*Dlambda;
-  Curvature_Higgs_CT_L4[2][4][2][4] = 6*Dkappa2;
-  Curvature_Higgs_CT_L4[2][4][4][2] = 6*Dkappa2;
-  Curvature_Higgs_CT_L4[3][0][0][3] = 6*Dlambda;
-  Curvature_Higgs_CT_L4[3][0][3][0] = 6*Dlambda;
-  Curvature_Higgs_CT_L4[3][1][1][3] = 6*Dlambda;
-  Curvature_Higgs_CT_L4[3][1][3][1] = 6*Dlambda;
-  Curvature_Higgs_CT_L4[3][2][2][3] = 6*Dlambda;
-  Curvature_Higgs_CT_L4[3][2][3][2] = 6*Dlambda;
-  Curvature_Higgs_CT_L4[3][3][0][0] = 6*Dlambda;
-  Curvature_Higgs_CT_L4[3][3][1][1] = 6*Dlambda;
-  Curvature_Higgs_CT_L4[3][3][2][2] = 6*Dlambda;
+  Curvature_Higgs_CT_L4[2][2][3][3] = Dlambda;
+  Curvature_Higgs_CT_L4[2][2][4][4] = Dkappa2;
+  Curvature_Higgs_CT_L4[2][3][2][3] = Dlambda;
+  Curvature_Higgs_CT_L4[2][3][3][2] = Dlambda;
+  Curvature_Higgs_CT_L4[2][4][2][4] = Dkappa2;
+  Curvature_Higgs_CT_L4[2][4][4][2] = Dkappa2;
+  Curvature_Higgs_CT_L4[3][0][0][3] = Dlambda;
+  Curvature_Higgs_CT_L4[3][0][3][0] = Dlambda;
+  Curvature_Higgs_CT_L4[3][1][1][3] = Dlambda;
+  Curvature_Higgs_CT_L4[3][1][3][1] = Dlambda;
+  Curvature_Higgs_CT_L4[3][2][2][3] = Dlambda;
+  Curvature_Higgs_CT_L4[3][2][3][2] = Dlambda;
+  Curvature_Higgs_CT_L4[3][3][0][0] = Dlambda;
+  Curvature_Higgs_CT_L4[3][3][1][1] = Dlambda;
+  Curvature_Higgs_CT_L4[3][3][2][2] = Dlambda;
   Curvature_Higgs_CT_L4[3][3][3][3] = 3*Dlambda;
-  Curvature_Higgs_CT_L4[3][3][4][4] = 6*Dkappa2;
-  Curvature_Higgs_CT_L4[3][4][3][4] = 6*Dkappa2;
-  Curvature_Higgs_CT_L4[3][4][4][3] = 6*Dkappa2;
-  Curvature_Higgs_CT_L4[4][0][0][4] = 6*Dkappa2;
-  Curvature_Higgs_CT_L4[4][0][4][0] = 6*Dkappa2;
-  Curvature_Higgs_CT_L4[4][1][1][4] = 6*Dkappa2;
-  Curvature_Higgs_CT_L4[4][1][4][1] = 6*Dkappa2;
-  Curvature_Higgs_CT_L4[4][2][2][4] = 6*Dkappa2;
-  Curvature_Higgs_CT_L4[4][2][4][2] = 6*Dkappa2;
-  Curvature_Higgs_CT_L4[4][3][3][4] = 6*Dkappa2;
-  Curvature_Higgs_CT_L4[4][3][4][3] = 6*Dkappa2;
-  Curvature_Higgs_CT_L4[4][4][0][0] = 6*Dkappa2;
-  Curvature_Higgs_CT_L4[4][4][1][1] = 6*Dkappa2;
-  Curvature_Higgs_CT_L4[4][4][2][2] = 6*Dkappa2;
-  Curvature_Higgs_CT_L4[4][4][3][3] = 6*Dkappa2;
+  Curvature_Higgs_CT_L4[3][3][4][4] = Dkappa2;
+  Curvature_Higgs_CT_L4[3][4][3][4] = Dkappa2;
+  Curvature_Higgs_CT_L4[3][4][4][3] = Dkappa2;
+  Curvature_Higgs_CT_L4[4][0][0][4] = Dkappa2;
+  Curvature_Higgs_CT_L4[4][0][4][0] = Dkappa2;
+  Curvature_Higgs_CT_L4[4][1][1][4] = Dkappa2;
+  Curvature_Higgs_CT_L4[4][1][4][1] = Dkappa2;
+  Curvature_Higgs_CT_L4[4][2][2][4] = Dkappa2;
+  Curvature_Higgs_CT_L4[4][2][4][2] = Dkappa2;
+  Curvature_Higgs_CT_L4[4][3][3][4] = Dkappa2;
+  Curvature_Higgs_CT_L4[4][3][4][3] = Dkappa2;
+  Curvature_Higgs_CT_L4[4][4][0][0] = Dkappa2;
+  Curvature_Higgs_CT_L4[4][4][1][1] = Dkappa2;
+  Curvature_Higgs_CT_L4[4][4][2][2] = Dkappa2;
+  Curvature_Higgs_CT_L4[4][4][3][3] = Dkappa2;
   Curvature_Higgs_CT_L4[4][4][4][4] = 12*Dlambdas;
 
 }
@@ -803,85 +807,85 @@ void Class_Potential_SMRSS::SetCurvatureArrays(){
     Curvature_Higgs_L2[3][3] = muSq;
     Curvature_Higgs_L2[4][4] = Mssq;
 
-    Curvature_Higgs_L3[0][0][4] = 3*kappa1;
-    Curvature_Higgs_L3[0][4][0] = 3*kappa1;
-    Curvature_Higgs_L3[1][1][4] = 3*kappa1;
-    Curvature_Higgs_L3[1][4][1] = 3*kappa1;
-    Curvature_Higgs_L3[2][2][4] = 3*kappa1;
-    Curvature_Higgs_L3[2][4][2] = 3*kappa1;
-    Curvature_Higgs_L3[3][3][4] = 3*kappa1;
-    Curvature_Higgs_L3[3][4][3] = 3*kappa1;
-    Curvature_Higgs_L3[4][0][0] = 3*kappa1;
-    Curvature_Higgs_L3[4][1][1] = 3*kappa1;
-    Curvature_Higgs_L3[4][2][2] = 3*kappa1;
-    Curvature_Higgs_L3[4][3][3] = 3*kappa1;
+    Curvature_Higgs_L3[0][0][4] = kappa1;
+    Curvature_Higgs_L3[0][4][0] = kappa1;
+    Curvature_Higgs_L3[1][1][4] = kappa1;
+    Curvature_Higgs_L3[1][4][1] = kappa1;
+    Curvature_Higgs_L3[2][2][4] = kappa1;
+    Curvature_Higgs_L3[2][4][2] = kappa1;
+    Curvature_Higgs_L3[3][3][4] = kappa1;
+    Curvature_Higgs_L3[3][4][3] = kappa1;
+    Curvature_Higgs_L3[4][0][0] = kappa1;
+    Curvature_Higgs_L3[4][1][1] = kappa1;
+    Curvature_Higgs_L3[4][2][2] = kappa1;
+    Curvature_Higgs_L3[4][3][3] = kappa1;
     Curvature_Higgs_L3[4][4][4] = 2*kappa;
 
     Curvature_Higgs_L4[0][0][0][0] = 3*lambda;
-    Curvature_Higgs_L4[0][0][1][1] = 6*lambda;
-    Curvature_Higgs_L4[0][0][2][2] = 6*lambda;
-    Curvature_Higgs_L4[0][0][3][3] = 6*lambda;
-    Curvature_Higgs_L4[0][0][4][4] = 6*kappa2;
-    Curvature_Higgs_L4[0][1][0][1] = 6*lambda;
-    Curvature_Higgs_L4[0][1][1][0] = 6*lambda;
-    Curvature_Higgs_L4[0][2][0][2] = 6*lambda;
-    Curvature_Higgs_L4[0][2][2][0] = 6*lambda;
-    Curvature_Higgs_L4[0][3][0][3] = 6*lambda;
-    Curvature_Higgs_L4[0][3][3][0] = 6*lambda;
-    Curvature_Higgs_L4[0][4][0][4] = 6*kappa2;
-    Curvature_Higgs_L4[0][4][4][0] = 6*kappa2;
-    Curvature_Higgs_L4[1][0][0][1] = 6*lambda;
-    Curvature_Higgs_L4[1][0][1][0] = 6*lambda;
-    Curvature_Higgs_L4[1][1][0][0] = 6*lambda;
+    Curvature_Higgs_L4[0][0][1][1] = lambda;
+    Curvature_Higgs_L4[0][0][2][2] = lambda;
+    Curvature_Higgs_L4[0][0][3][3] = lambda;
+    Curvature_Higgs_L4[0][0][4][4] = kappa2;
+    Curvature_Higgs_L4[0][1][0][1] = lambda;
+    Curvature_Higgs_L4[0][1][1][0] = lambda;
+    Curvature_Higgs_L4[0][2][0][2] = lambda;
+    Curvature_Higgs_L4[0][2][2][0] = lambda;
+    Curvature_Higgs_L4[0][3][0][3] = lambda;
+    Curvature_Higgs_L4[0][3][3][0] = lambda;
+    Curvature_Higgs_L4[0][4][0][4] = kappa2;
+    Curvature_Higgs_L4[0][4][4][0] = kappa2;
+    Curvature_Higgs_L4[1][0][0][1] = lambda;
+    Curvature_Higgs_L4[1][0][1][0] = lambda;
+    Curvature_Higgs_L4[1][1][0][0] = lambda;
     Curvature_Higgs_L4[1][1][1][1] = 3*lambda;
-    Curvature_Higgs_L4[1][1][2][2] = 6*lambda;
-    Curvature_Higgs_L4[1][1][3][3] = 6*lambda;
-    Curvature_Higgs_L4[1][1][4][4] = 6*kappa2;
-    Curvature_Higgs_L4[1][2][1][2] = 6*lambda;
-    Curvature_Higgs_L4[1][2][2][1] = 6*lambda;
-    Curvature_Higgs_L4[1][3][1][3] = 6*lambda;
-    Curvature_Higgs_L4[1][3][3][1] = 6*lambda;
-    Curvature_Higgs_L4[1][4][1][4] = 6*kappa2;
-    Curvature_Higgs_L4[1][4][4][1] = 6*kappa2;
-    Curvature_Higgs_L4[2][0][0][2] = 6*lambda;
-    Curvature_Higgs_L4[2][0][2][0] = 6*lambda;
-    Curvature_Higgs_L4[2][1][1][2] = 6*lambda;
-    Curvature_Higgs_L4[2][1][2][1] = 6*lambda;
-    Curvature_Higgs_L4[2][2][0][0] = 6*lambda;
-    Curvature_Higgs_L4[2][2][1][1] = 6*lambda;
+    Curvature_Higgs_L4[1][1][2][2] = lambda;
+    Curvature_Higgs_L4[1][1][3][3] = lambda;
+    Curvature_Higgs_L4[1][1][4][4] = kappa2;
+    Curvature_Higgs_L4[1][2][1][2] = lambda;
+    Curvature_Higgs_L4[1][2][2][1] = lambda;
+    Curvature_Higgs_L4[1][3][1][3] = lambda;
+    Curvature_Higgs_L4[1][3][3][1] = lambda;
+    Curvature_Higgs_L4[1][4][1][4] = kappa2;
+    Curvature_Higgs_L4[1][4][4][1] = kappa2;
+    Curvature_Higgs_L4[2][0][0][2] = lambda;
+    Curvature_Higgs_L4[2][0][2][0] = lambda;
+    Curvature_Higgs_L4[2][1][1][2] = lambda;
+    Curvature_Higgs_L4[2][1][2][1] = lambda;
+    Curvature_Higgs_L4[2][2][0][0] = lambda;
+    Curvature_Higgs_L4[2][2][1][1] = lambda;
     Curvature_Higgs_L4[2][2][2][2] = 3*lambda;
-    Curvature_Higgs_L4[2][2][3][3] = 6*lambda;
-    Curvature_Higgs_L4[2][2][4][4] = 6*kappa2;
-    Curvature_Higgs_L4[2][3][2][3] = 6*lambda;
-    Curvature_Higgs_L4[2][3][3][2] = 6*lambda;
-    Curvature_Higgs_L4[2][4][2][4] = 6*kappa2;
-    Curvature_Higgs_L4[2][4][4][2] = 6*kappa2;
-    Curvature_Higgs_L4[3][0][0][3] = 6*lambda;
-    Curvature_Higgs_L4[3][0][3][0] = 6*lambda;
-    Curvature_Higgs_L4[3][1][1][3] = 6*lambda;
-    Curvature_Higgs_L4[3][1][3][1] = 6*lambda;
-    Curvature_Higgs_L4[3][2][2][3] = 6*lambda;
-    Curvature_Higgs_L4[3][2][3][2] = 6*lambda;
-    Curvature_Higgs_L4[3][3][0][0] = 6*lambda;
-    Curvature_Higgs_L4[3][3][1][1] = 6*lambda;
-    Curvature_Higgs_L4[3][3][2][2] = 6*lambda;
+    Curvature_Higgs_L4[2][2][3][3] = lambda;
+    Curvature_Higgs_L4[2][2][4][4] = kappa2;
+    Curvature_Higgs_L4[2][3][2][3] = lambda;
+    Curvature_Higgs_L4[2][3][3][2] = lambda;
+    Curvature_Higgs_L4[2][4][2][4] = kappa2;
+    Curvature_Higgs_L4[2][4][4][2] = kappa2;
+    Curvature_Higgs_L4[3][0][0][3] = lambda;
+    Curvature_Higgs_L4[3][0][3][0] = lambda;
+    Curvature_Higgs_L4[3][1][1][3] = lambda;
+    Curvature_Higgs_L4[3][1][3][1] = lambda;
+    Curvature_Higgs_L4[3][2][2][3] = lambda;
+    Curvature_Higgs_L4[3][2][3][2] = lambda;
+    Curvature_Higgs_L4[3][3][0][0] = lambda;
+    Curvature_Higgs_L4[3][3][1][1] = lambda;
+    Curvature_Higgs_L4[3][3][2][2] = lambda;
     Curvature_Higgs_L4[3][3][3][3] = 3*lambda;
-    Curvature_Higgs_L4[3][3][4][4] = 6*kappa2;
-    Curvature_Higgs_L4[3][4][3][4] = 6*kappa2;
-    Curvature_Higgs_L4[3][4][4][3] = 6*kappa2;
-    Curvature_Higgs_L4[4][0][0][4] = 6*kappa2;
-    Curvature_Higgs_L4[4][0][4][0] = 6*kappa2;
-    Curvature_Higgs_L4[4][1][1][4] = 6*kappa2;
-    Curvature_Higgs_L4[4][1][4][1] = 6*kappa2;
-    Curvature_Higgs_L4[4][2][2][4] = 6*kappa2;
-    Curvature_Higgs_L4[4][2][4][2] = 6*kappa2;
-    Curvature_Higgs_L4[4][3][3][4] = 6*kappa2;
-    Curvature_Higgs_L4[4][3][4][3] = 6*kappa2;
-    Curvature_Higgs_L4[4][4][0][0] = 6*kappa2;
-    Curvature_Higgs_L4[4][4][1][1] = 6*kappa2;
-    Curvature_Higgs_L4[4][4][2][2] = 6*kappa2;
-    Curvature_Higgs_L4[4][4][3][3] = 6*kappa2;
-    Curvature_Higgs_L4[4][4][4][4] = 12*lambdas;  
+    Curvature_Higgs_L4[3][3][4][4] = kappa2;
+    Curvature_Higgs_L4[3][4][3][4] = kappa2;
+    Curvature_Higgs_L4[3][4][4][3] = kappa2;
+    Curvature_Higgs_L4[4][0][0][4] = kappa2;
+    Curvature_Higgs_L4[4][0][4][0] = kappa2;
+    Curvature_Higgs_L4[4][1][1][4] = kappa2;
+    Curvature_Higgs_L4[4][1][4][1] = kappa2;
+    Curvature_Higgs_L4[4][2][2][4] = kappa2;
+    Curvature_Higgs_L4[4][2][4][2] = kappa2;
+    Curvature_Higgs_L4[4][3][3][4] = kappa2;
+    Curvature_Higgs_L4[4][3][4][3] = kappa2;
+    Curvature_Higgs_L4[4][4][0][0] = kappa2;
+    Curvature_Higgs_L4[4][4][1][1] = kappa2;
+    Curvature_Higgs_L4[4][4][2][2] = kappa2;
+    Curvature_Higgs_L4[4][4][3][3] = kappa2;
+    Curvature_Higgs_L4[4][4][4][4] = 12*lambdas;
 
     SetCurvatureDone=true;
 
