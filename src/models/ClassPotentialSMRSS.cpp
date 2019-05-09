@@ -169,11 +169,6 @@ void Class_Potential_SMRSS::set_gen(const std::vector<double>& par) {
 
     double MS2 = std::pow(MS,2);
     double MH2 = std::pow(C_MassSMHiggs,2);
-    /*
-    {\[Lambda]->(MH2 Cos[\[Theta]]^2+MS2 Sin[\[Theta]]^2)/v^2,
-     Subscript[\[Kappa], 1]->(vs (-MH2-MS2+2 vs (\[Kappa]+4 vs \[Lambda]s)+(MH2-MS2) Cos[2 \[Theta]]))/v^2,
-     Subscript[\[Kappa], 2]->(2 vs (MH2+MS2-2 vs (\[Kappa]+4 vs \[Lambda]s)+(-MH2+MS2) Cos[2 \[Theta]])+(MH2-MS2) v Sin[2 \[Theta]])/(2 v^2 vs)}
-    */
 
     lambda = (1.0/std::pow(C_vev0,2))*(MH2*std::pow(cos_theta,2) + MS2*std::pow(sin_theta,2));
 
@@ -354,7 +349,7 @@ void Class_Potential_SMRSS::write() {
  * Calculates the counterterms. Here you need to work out the scheme and implement the formulas.
  */
 void Class_Potential_SMRSS::calc_CT(std::vector<double>& par){
-	bool Debug=false;
+	bool Debug=true;
 	if(Debug) std::cout << "Start" << __func__ << std::endl;
 
 	if(!SetCurvatureDone)SetCurvatureArrays();
@@ -373,15 +368,28 @@ void Class_Potential_SMRSS::calc_CT(std::vector<double>& par){
 	for(int i=0;i<NHiggs;i++)
 	{
 		Deriv1[i] = WeinbergNabla[i];
-		for(int j=0;j<NHiggs;j++) Deriv2(i,j) = WeinbergHesse.at(j*NHiggs+i);
-	}
+		for(int j=0;j<NHiggs;j++) 
+    {
+      Deriv2(i,j) = WeinbergHesse.at(j*NHiggs+i);
+       if(std::abs(Deriv2(i,j)) <= 1e-3) Deriv2(i,j)=0;
+	  }
+  }
+   
 
-  DmuSq = (-1.0/(2*C_vev0))*(3.0*Deriv1(2) - vs*Deriv2(2,4) - C_vev0*Deriv2(2,2));
-  Dlambda = (-1.0/std::pow(C_vev0,3))*(-Deriv1(2) + C_vev0*Deriv2(2,2));
-  Dkappa = (-1.0/(2*std::pow(vs,2)))*(6.0*Deriv1(4) - 2.0*vs*Deriv2(4,4) - 2.0*C_vev0*Deriv2(2,4));
-  Dlambdas = (-1.0/(4.0*std::pow(vs,3)))*(-4.0*Deriv1(4) + 2.0*vs*Deriv2(4,4) + C_vev0*Deriv2(2,4));
-  Dkappa2 = (-1.0/(C_vev0*vs))*Deriv2(2,4); 
-  DT3 = 0;
+  DmuSq = (1.0/2.0)*(Deriv2(2,2) - 3.0*Deriv2(3,3) + (vs/C_vev0)*Deriv2(4,2));
+  Dlambda = (1.0/std::pow(C_vev0,2))*(Deriv2(3,3) - Deriv2(2,2));
+  Dkappa = (-1.0/(2*std::pow(vs,2)))*(6.0*Deriv1(4) - 2.0*C_vev0*Deriv2(4,2) - 2.0*vs*Deriv2(4,4));
+  Dlambdas = (1.0/(4.0*std::pow(vs,3)))*(4.0*Deriv1(4) - C_vev0*Deriv2(4,2) - 2.0*vs*Deriv2(4,4));
+  Dkappa2 = (-1.0/(C_vev0*vs))*Deriv2(4,2); 
+  DT3 = -1.0*Deriv1(2) + C_vev0*Deriv2(3,3);
+  
+  // DmuSq = 0;
+  // Dlambda = 0;
+  // Dkappa = 0;
+  // Dlambdas = 0;
+  // Dkappa2 = 0;
+  // DT3 = 0;
+  
   DT5 = 0;
   DMssq = 0;
   Dkappa1 = 0;
@@ -535,6 +543,11 @@ void Class_Potential_SMRSS::SetCurvatureArrays(){
 
     Yu = (std::sqrt(2) / C_vev0)*(ckm.adjoint())*Mu*ckm;
     Yd = (std::sqrt(2) / C_vev0)*ckm*Md*(ckm.adjoint());
+
+    // If we don't wan't CKM mixing:
+    // Yu = (std::sqrt(2) / C_vev0)*Mu;
+    // Yd = (std::sqrt(2) / C_vev0)*Md;
+
     Ye = (std::sqrt(2) / C_vev0)*Me;
 
     std::complex<double> II(0,1);
@@ -759,23 +772,65 @@ void Class_Potential_SMRSS::SetCurvatureArrays(){
     Curvature_Lepton_F2H1[8][7][0] = Ye(2,2)/std::sqrt(2);
     Curvature_Lepton_F2H1[8][7][1] = (II*Ye(2,2))/std::sqrt(2);
 
+    // Old version
+    // Curvature_Gauge_G2H2[0][0][0][0] = std::pow(C_g,2)/(2.0);
+    // Curvature_Gauge_G2H2[0][0][1][1] = std::pow(C_g,2)/(2.0);
+    // Curvature_Gauge_G2H2[0][0][2][2] = std::pow(C_g,2)/(2.0);
+    // Curvature_Gauge_G2H2[0][0][3][3] = std::pow(C_g,2)/(2.0);
+    // Curvature_Gauge_G2H2[0][3][0][2] = (C_g)*(C_gs);
+    // Curvature_Gauge_G2H2[0][3][1][3] = (C_g)*(C_gs);
+    // Curvature_Gauge_G2H2[0][3][2][0] = (C_g)*(C_gs);
+    // Curvature_Gauge_G2H2[0][3][3][1] = (C_g)*(C_gs);
+    // Curvature_Gauge_G2H2[1][1][0][0] = std::pow(C_g,2)/(2.0);
+    // Curvature_Gauge_G2H2[1][1][1][1] = std::pow(C_g,2)/(2.0);
+    // Curvature_Gauge_G2H2[1][1][2][2] = std::pow(C_g,2)/(2.0);
+    // Curvature_Gauge_G2H2[1][1][3][3] = std::pow(C_g,2)/(2.0);
+    // Curvature_Gauge_G2H2[1][3][0][3] = (C_g)*(C_gs);
+    // Curvature_Gauge_G2H2[1][3][1][2] = -((C_g)*(C_gs));
+    // Curvature_Gauge_G2H2[1][3][2][1] = -((C_g)*(C_gs));
+    // Curvature_Gauge_G2H2[1][3][3][0] = (C_g)*(C_gs);
+    // Curvature_Gauge_G2H2[2][2][0][0] = std::pow(C_g,2)/(2.0);
+    // Curvature_Gauge_G2H2[2][2][1][1] = std::pow(C_g,2)/(2.0);
+    // Curvature_Gauge_G2H2[2][2][2][2] = std::pow(C_g,2)/(2.0);
+    // Curvature_Gauge_G2H2[2][2][3][3] = std::pow(C_g,2)/(2.0);
+    // Curvature_Gauge_G2H2[2][3][0][0] = ((C_g)*(C_gs))/(2.0);
+    // Curvature_Gauge_G2H2[2][3][1][1] = ((C_g)*(C_gs))/(2.0);
+    // Curvature_Gauge_G2H2[2][3][2][2] = -((C_g)*(C_gs))/(2.0);
+    // Curvature_Gauge_G2H2[2][3][3][3] = -((C_g)*(C_gs))/(2.0);
+    // Curvature_Gauge_G2H2[3][0][0][2] = (C_g)*(C_gs);
+    // Curvature_Gauge_G2H2[3][0][1][3] = (C_g)*(C_gs);
+    // Curvature_Gauge_G2H2[3][0][2][0] = (C_g)*(C_gs);
+    // Curvature_Gauge_G2H2[3][0][3][1] = (C_g)*(C_gs);
+    // Curvature_Gauge_G2H2[3][1][0][3] = (C_g)*(C_gs);
+    // Curvature_Gauge_G2H2[3][1][1][2] = -((C_g)*(C_gs));
+    // Curvature_Gauge_G2H2[3][1][2][1] = -((C_g)*(C_gs));
+    // Curvature_Gauge_G2H2[3][1][3][0] = (C_g)*(C_gs);
+    // Curvature_Gauge_G2H2[3][2][0][0] = ((C_g)*(C_gs))/(2.0);
+    // Curvature_Gauge_G2H2[3][2][1][1] = ((C_g)*(C_gs))/(2.0);
+    // Curvature_Gauge_G2H2[3][2][2][2] = -((C_g)*(C_gs))/(2.0);
+    // Curvature_Gauge_G2H2[3][2][3][3] = -((C_g)*(C_gs))/(2.0);
+    // Curvature_Gauge_G2H2[3][3][0][0] = std::pow(C_gs,2)/(2.0);
+    // Curvature_Gauge_G2H2[3][3][1][1] = std::pow(C_gs,2)/(2.0);
+    // Curvature_Gauge_G2H2[3][3][2][2] = std::pow(C_gs,2)/(2.0);
+    // Curvature_Gauge_G2H2[3][3][3][3] = std::pow(C_gs,2)/(2.0);
 
+    // Derived using derivatives
     Curvature_Gauge_G2H2[0][0][0][0] = std::pow(C_g,2)/(2.0);
     Curvature_Gauge_G2H2[0][0][1][1] = std::pow(C_g,2)/(2.0);
     Curvature_Gauge_G2H2[0][0][2][2] = std::pow(C_g,2)/(2.0);
     Curvature_Gauge_G2H2[0][0][3][3] = std::pow(C_g,2)/(2.0);
-    Curvature_Gauge_G2H2[0][3][0][2] = (C_g)*(C_gs);
-    Curvature_Gauge_G2H2[0][3][1][3] = (C_g)*(C_gs);
-    Curvature_Gauge_G2H2[0][3][2][0] = (C_g)*(C_gs);
-    Curvature_Gauge_G2H2[0][3][3][1] = (C_g)*(C_gs);
+    Curvature_Gauge_G2H2[0][3][0][2] = ((C_g)*(C_gs))/(2.0);
+    Curvature_Gauge_G2H2[0][3][1][3] = ((C_g)*(C_gs))/(2.0);
+    Curvature_Gauge_G2H2[0][3][2][0] = ((C_g)*(C_gs))/(2.0);
+    Curvature_Gauge_G2H2[0][3][3][1] = ((C_g)*(C_gs))/(2.0);
     Curvature_Gauge_G2H2[1][1][0][0] = std::pow(C_g,2)/(2.0);
     Curvature_Gauge_G2H2[1][1][1][1] = std::pow(C_g,2)/(2.0);
     Curvature_Gauge_G2H2[1][1][2][2] = std::pow(C_g,2)/(2.0);
     Curvature_Gauge_G2H2[1][1][3][3] = std::pow(C_g,2)/(2.0);
-    Curvature_Gauge_G2H2[1][3][0][3] = (C_g)*(C_gs);
-    Curvature_Gauge_G2H2[1][3][1][2] = -((C_g)*(C_gs));
-    Curvature_Gauge_G2H2[1][3][2][1] = -((C_g)*(C_gs));
-    Curvature_Gauge_G2H2[1][3][3][0] = (C_g)*(C_gs);
+    Curvature_Gauge_G2H2[1][3][0][3] = ((C_g)*(C_gs))/(2.0);
+    Curvature_Gauge_G2H2[1][3][1][2] = -((C_g)*(C_gs))/(2.0);
+    Curvature_Gauge_G2H2[1][3][2][1] = -((C_g)*(C_gs))/(2.0);
+    Curvature_Gauge_G2H2[1][3][3][0] = ((C_g)*(C_gs))/(2.0);
     Curvature_Gauge_G2H2[2][2][0][0] = std::pow(C_g,2)/(2.0);
     Curvature_Gauge_G2H2[2][2][1][1] = std::pow(C_g,2)/(2.0);
     Curvature_Gauge_G2H2[2][2][2][2] = std::pow(C_g,2)/(2.0);
@@ -784,14 +839,14 @@ void Class_Potential_SMRSS::SetCurvatureArrays(){
     Curvature_Gauge_G2H2[2][3][1][1] = ((C_g)*(C_gs))/(2.0);
     Curvature_Gauge_G2H2[2][3][2][2] = -((C_g)*(C_gs))/(2.0);
     Curvature_Gauge_G2H2[2][3][3][3] = -((C_g)*(C_gs))/(2.0);
-    Curvature_Gauge_G2H2[3][0][0][2] = (C_g)*(C_gs);
-    Curvature_Gauge_G2H2[3][0][1][3] = (C_g)*(C_gs);
-    Curvature_Gauge_G2H2[3][0][2][0] = (C_g)*(C_gs);
-    Curvature_Gauge_G2H2[3][0][3][1] = (C_g)*(C_gs);
-    Curvature_Gauge_G2H2[3][1][0][3] = (C_g)*(C_gs);
-    Curvature_Gauge_G2H2[3][1][1][2] = -((C_g)*(C_gs));
-    Curvature_Gauge_G2H2[3][1][2][1] = -((C_g)*(C_gs));
-    Curvature_Gauge_G2H2[3][1][3][0] = (C_g)*(C_gs);
+    Curvature_Gauge_G2H2[3][0][0][2] = ((C_g)*(C_gs))/(2.0);
+    Curvature_Gauge_G2H2[3][0][1][3] = ((C_g)*(C_gs))/(2.0);
+    Curvature_Gauge_G2H2[3][0][2][0] = ((C_g)*(C_gs))/(2.0);
+    Curvature_Gauge_G2H2[3][0][3][1] = ((C_g)*(C_gs))/(2.0);
+    Curvature_Gauge_G2H2[3][1][0][3] = ((C_g)*(C_gs))/(2.0);
+    Curvature_Gauge_G2H2[3][1][1][2] = -((C_g)*(C_gs))/(2.0);
+    Curvature_Gauge_G2H2[3][1][2][1] = -((C_g)*(C_gs))/(2.0);
+    Curvature_Gauge_G2H2[3][1][3][0] = ((C_g)*(C_gs))/(2.0);
     Curvature_Gauge_G2H2[3][2][0][0] = ((C_g)*(C_gs))/(2.0);
     Curvature_Gauge_G2H2[3][2][1][1] = ((C_g)*(C_gs))/(2.0);
     Curvature_Gauge_G2H2[3][2][2][2] = -((C_g)*(C_gs))/(2.0);
