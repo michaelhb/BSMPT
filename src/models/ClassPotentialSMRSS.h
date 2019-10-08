@@ -26,22 +26,15 @@ class Class_Potential_SMRSS : public Class_Potential_Origin
 {
 public:
     Class_Potential_SMRSS ();
-  virtual
-  ~Class_Potential_SMRSS ();
+    virtual
+    ~Class_Potential_SMRSS ();
 
 
-  // Add here your parameters for the Lagrangian as well as for the counterterm potential
-  // Add here your variables in which you will save the Debye correction factors
+    // Add here your parameters for the Lagrangian as well as for the counterterm potential
+    // Add here your variables in which you will save the Debye correction factors
 
-    // Input params
-    double cos_theta, vs, MS, lambdas, kappa; // NB MS is the mass basis singlet mass
-
-    // Other lagrangian parameters
-    double muSq, lambda, Mssq, kappa1, kappa2; // And Mssq is the squared singlet mass in the gauge basis
-
-    // Counterterm parameters
-    double DmuSq, Dlambda, DMssq, Dkappa1, Dkappa2, Dkappa, Dlambdas,
-            DT3, DT5;
+    // Lagrangian input params
+    double mu2, ms2, lambda, lambdas, kappa, kappa1, kappa2, vs;
 
 
     void ReadAndSet(const std::string& linestr, std::vector<double>& par);

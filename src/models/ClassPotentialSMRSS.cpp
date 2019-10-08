@@ -37,8 +37,8 @@ Class_Potential_SMRSS::Class_Potential_SMRSS ()
   NNeutralHiggs = 5; // number of neutral Higgs bosons at T = 0
   NChargedHiggs=0; // number of charged Higgs bosons  at T = 0 (all d.o.f.)
 
-  nPar = 5; // number of parameters in the tree-Level Lagrangian
-  nParCT = 9; // number of parameters in the counterterm potential
+  nPar = 8; // number of parameters in the tree-Level Lagrangian
+  nParCT = 0; // number of parameters in the counterterm potential
 
   nVEV=2; // number of VEVs to minimize the potential
 
@@ -55,7 +55,8 @@ Class_Potential_SMRSS::~Class_Potential_SMRSS ()
  * complement the legend of the given input file
  */
 std::string Class_Potential_SMRSS::addLegendCT(){
-  std::string out = "DmuSq\tDlambda\tDMssq\tDkappa1\tDkappa2\tDkappa\tDlambdas\tDT3\tDT5";
+  // std::string out = "DmuSq\tDlambda\tDMssq\tDkappa1\tDkappa2\tDkappa\tDlambdas\tDT3\tDT5";
+  std::string out = "";
   return out;
 }
 
@@ -64,7 +65,7 @@ std::string Class_Potential_SMRSS::addLegendCT(){
  * complement the legend of the given input file
  */
 std::string Class_Potential_SMRSS::addLegendTemp(){
-  std::string out = "T_c\tv_c\tv\tvs";
+  std::string out = "T_c\tv_c\tv(T_c)\tvs(T_c)\tv(T_c)/T_c";
   return out;
 }
 
@@ -127,22 +128,28 @@ void Class_Potential_SMRSS::ReadAndSet(const std::string& linestr, std::vector<d
 	std::stringstream ss(linestr);
 	double tmp;
 
-	double lcos_theta, lvs, lMS, llambdas, lkappa;
+	double lmu2, lms2, llambda, llambdas, lkappa, lkappa1, lkappa2, lvs;
 
-	for(int k=1;k<=5;k++)
+	for(int k=1;k<=8;k++)
 	{
 	      ss>>tmp;
-	      if(k==1) lcos_theta = tmp;
-	      else if (k==2) lvs = tmp;
-	      else if (k==3) lMS = tmp;
+	      if(k==1) lmu2 = tmp;
+	      else if (k==2) lms2 = tmp;
+	      else if (k==3) llambda = tmp;
 	      else if (k==4) llambdas = tmp;
 	      else if (k==5) lkappa = tmp;
+        else if (k==6) lkappa1 = tmp;
+        else if (k==7) lkappa2 = tmp;
+        else if (k==8) lvs = tmp;
 	}
-	par[0] = lcos_theta;
-	par[1] = lvs;
-	par[2] = lMS;
+	par[0] = lmu2;
+	par[1] = lms2;
+	par[2] = llambda;
 	par[3] = llambdas;
 	par[4] = lkappa;
+  par[5] = lkappa1;
+  par[6] = lkappa2;
+  par[7] = lvs;
 
 
 	set_gen(par); // This you have to call so that everything will be set
@@ -156,37 +163,14 @@ void Class_Potential_SMRSS::ReadAndSet(const std::string& linestr, std::vector<d
 void Class_Potential_SMRSS::set_gen(const std::vector<double>& par) {
 
     // direct input params
-    cos_theta = par[0];
-    vs = par[1];
-    MS = par[2];
+    mu2 = par[0];
+    ms2 = par[1];
+    lambda = par[2];
     lambdas = par[3];
     kappa = par[4];
-
-    // Input parameters -> gauge basis Lagrangian parameters
-    double sin_theta = std::sin(std::acos(cos_theta));
-    double cos_2_theta = std::pow(cos_theta, 2) - std::pow(sin_theta,2);
-    double sin_2_theta = 2.0*sin_theta*cos_theta;
-
-    double MS2 = std::pow(MS,2);
-    double MH2 = std::pow(C_MassSMHiggs,2);
-
-    lambda = (1.0/std::pow(C_vev0,2))*(MH2*std::pow(cos_theta,2) + MS2*std::pow(sin_theta,2));
-
-    kappa1 = (vs/std::pow(C_vev0,2))*(
-      -1.0*(MH2 + MS2) + 2*vs*(kappa + 4.0*vs*lambdas) +
-      (MH2 - MS2)*cos_2_theta
-    );
-
-    kappa2 = ((1.0)/(2*std::pow(C_vev0,2)*vs))*(
-      2.0*vs*(MH2 + MS2 - 2.0*vs*(kappa + 4.0*vs*lambdas) + (MS2 - MH2)*cos_2_theta) +
-      (MH2 - MS2)*C_vev0*sin_2_theta
-    );
-
-    muSq = (-0.5)*(std::pow(C_vev0,2)*lambda + 2.0*vs*kappa1 + std::pow(vs,2)*kappa2);
-
-    Mssq = (-1.0/(2.0*vs))*(
-      2.0*std::pow(vs,2)*kappa + 4*std::pow(vs,3)*lambdas + 
-      std::pow(C_vev0, 2)*kappa1 + std::pow(C_vev0,2)*vs*kappa2);
+    kappa1 = par[5];
+    kappa2 = par[6];
+    vs = par[7];
 
     // This sets the renormalization scale
     scale = C_vev0;
@@ -207,106 +191,7 @@ void Class_Potential_SMRSS::set_gen(const std::vector<double>& par) {
  * Curvature_Higgs_CT_L4.
  */
 void Class_Potential_SMRSS::set_CT_Pot_Par(const std::vector<double>& par){
-
-  DmuSq = par[0];
-  Dlambda = par[1];
-  DMssq = par[2];
-  Dkappa1 = par[3];
-  Dkappa2 = par[4];
-  Dkappa = par[5];
-  Dlambdas = par[6];
-  DT3 = par[7];
-  DT5 = par[8];
-
-  Curvature_Higgs_CT_L1[2] = DT3;
-  Curvature_Higgs_CT_L1[4] = DT5;
-
-  Curvature_Higgs_CT_L2[0][0] = DmuSq;
-  Curvature_Higgs_CT_L2[1][1] = DmuSq;
-  Curvature_Higgs_CT_L2[2][2] = DmuSq;
-  Curvature_Higgs_CT_L2[3][3] = DmuSq;
-  Curvature_Higgs_CT_L2[4][4] = DMssq;
-
-  Curvature_Higgs_CT_L3[0][0][4] = Dkappa1;
-  Curvature_Higgs_CT_L3[0][4][0] = Dkappa1;
-  Curvature_Higgs_CT_L3[1][1][4] = Dkappa1;
-  Curvature_Higgs_CT_L3[1][4][1] = Dkappa1;
-  Curvature_Higgs_CT_L3[2][2][4] = Dkappa1;
-  Curvature_Higgs_CT_L3[2][4][2] = Dkappa1;
-  Curvature_Higgs_CT_L3[3][3][4] = Dkappa1;
-  Curvature_Higgs_CT_L3[3][4][3] = Dkappa1;
-  Curvature_Higgs_CT_L3[4][0][0] = Dkappa1;
-  Curvature_Higgs_CT_L3[4][1][1] = Dkappa1;
-  Curvature_Higgs_CT_L3[4][2][2] = Dkappa1;
-  Curvature_Higgs_CT_L3[4][3][3] = Dkappa1;
-  Curvature_Higgs_CT_L3[4][4][4] = 2*Dkappa;
-
-  Curvature_Higgs_CT_L4[0][0][0][0] = 3*Dlambda;
-  Curvature_Higgs_CT_L4[0][0][1][1] = Dlambda;
-  Curvature_Higgs_CT_L4[0][0][2][2] = Dlambda;
-  Curvature_Higgs_CT_L4[0][0][3][3] = Dlambda;
-  Curvature_Higgs_CT_L4[0][0][4][4] = Dkappa2;
-  Curvature_Higgs_CT_L4[0][1][0][1] = Dlambda;
-  Curvature_Higgs_CT_L4[0][1][1][0] = Dlambda;
-  Curvature_Higgs_CT_L4[0][2][0][2] = Dlambda;
-  Curvature_Higgs_CT_L4[0][2][2][0] = Dlambda;
-  Curvature_Higgs_CT_L4[0][3][0][3] = Dlambda;
-  Curvature_Higgs_CT_L4[0][3][3][0] = Dlambda;
-  Curvature_Higgs_CT_L4[0][4][0][4] = Dkappa2;
-  Curvature_Higgs_CT_L4[0][4][4][0] = Dkappa2;
-  Curvature_Higgs_CT_L4[1][0][0][1] = Dlambda;
-  Curvature_Higgs_CT_L4[1][0][1][0] = Dlambda;
-  Curvature_Higgs_CT_L4[1][1][0][0] = Dlambda;
-  Curvature_Higgs_CT_L4[1][1][1][1] = 3*Dlambda;
-  Curvature_Higgs_CT_L4[1][1][2][2] = Dlambda;
-  Curvature_Higgs_CT_L4[1][1][3][3] = Dlambda;
-  Curvature_Higgs_CT_L4[1][1][4][4] = Dkappa2;
-  Curvature_Higgs_CT_L4[1][2][1][2] = Dlambda;
-  Curvature_Higgs_CT_L4[1][2][2][1] = Dlambda;
-  Curvature_Higgs_CT_L4[1][3][1][3] = Dlambda;
-  Curvature_Higgs_CT_L4[1][3][3][1] = Dlambda;
-  Curvature_Higgs_CT_L4[1][4][1][4] = Dkappa2;
-  Curvature_Higgs_CT_L4[1][4][4][1] = Dkappa2;
-  Curvature_Higgs_CT_L4[2][0][0][2] = Dlambda;
-  Curvature_Higgs_CT_L4[2][0][2][0] = Dlambda;
-  Curvature_Higgs_CT_L4[2][1][1][2] = Dlambda;
-  Curvature_Higgs_CT_L4[2][1][2][1] = Dlambda;
-  Curvature_Higgs_CT_L4[2][2][0][0] = Dlambda;
-  Curvature_Higgs_CT_L4[2][2][1][1] = Dlambda;
-  Curvature_Higgs_CT_L4[2][2][2][2] = 3*Dlambda;
-  Curvature_Higgs_CT_L4[2][2][3][3] = Dlambda;
-  Curvature_Higgs_CT_L4[2][2][4][4] = Dkappa2;
-  Curvature_Higgs_CT_L4[2][3][2][3] = Dlambda;
-  Curvature_Higgs_CT_L4[2][3][3][2] = Dlambda;
-  Curvature_Higgs_CT_L4[2][4][2][4] = Dkappa2;
-  Curvature_Higgs_CT_L4[2][4][4][2] = Dkappa2;
-  Curvature_Higgs_CT_L4[3][0][0][3] = Dlambda;
-  Curvature_Higgs_CT_L4[3][0][3][0] = Dlambda;
-  Curvature_Higgs_CT_L4[3][1][1][3] = Dlambda;
-  Curvature_Higgs_CT_L4[3][1][3][1] = Dlambda;
-  Curvature_Higgs_CT_L4[3][2][2][3] = Dlambda;
-  Curvature_Higgs_CT_L4[3][2][3][2] = Dlambda;
-  Curvature_Higgs_CT_L4[3][3][0][0] = Dlambda;
-  Curvature_Higgs_CT_L4[3][3][1][1] = Dlambda;
-  Curvature_Higgs_CT_L4[3][3][2][2] = Dlambda;
-  Curvature_Higgs_CT_L4[3][3][3][3] = 3*Dlambda;
-  Curvature_Higgs_CT_L4[3][3][4][4] = Dkappa2;
-  Curvature_Higgs_CT_L4[3][4][3][4] = Dkappa2;
-  Curvature_Higgs_CT_L4[3][4][4][3] = Dkappa2;
-  Curvature_Higgs_CT_L4[4][0][0][4] = Dkappa2;
-  Curvature_Higgs_CT_L4[4][0][4][0] = Dkappa2;
-  Curvature_Higgs_CT_L4[4][1][1][4] = Dkappa2;
-  Curvature_Higgs_CT_L4[4][1][4][1] = Dkappa2;
-  Curvature_Higgs_CT_L4[4][2][2][4] = Dkappa2;
-  Curvature_Higgs_CT_L4[4][2][4][2] = Dkappa2;
-  Curvature_Higgs_CT_L4[4][3][3][4] = Dkappa2;
-  Curvature_Higgs_CT_L4[4][3][4][3] = Dkappa2;
-  Curvature_Higgs_CT_L4[4][4][0][0] = Dkappa2;
-  Curvature_Higgs_CT_L4[4][4][1][1] = Dkappa2;
-  Curvature_Higgs_CT_L4[4][4][2][2] = Dkappa2;
-  Curvature_Higgs_CT_L4[4][4][3][3] = Dkappa2;
-  Curvature_Higgs_CT_L4[4][4][4][4] = 12*Dlambdas;
-
+  // Nothing to do
 }
 
 
@@ -316,34 +201,17 @@ void Class_Potential_SMRSS::set_CT_Pot_Par(const std::vector<double>& par){
 void Class_Potential_SMRSS::write() {
 
 	std::cout << "The input parameters are : " << std::endl;
-	std::cout << "cos_theta = " << cos_theta << std::endl
-            << "vs = " << vs << std::endl
-            << "MS = " << MS << std::endl
-            << "lambdas = " << lambdas << std::endl
-            << "kappa = " << kappa << std::endl;
-
-	std::cout << "Other lagrangian parameters calculated from these : " << std::endl;
-	std::cout << "muSq = " << muSq << std::endl
+	std::cout << "mu2 = " << mu2 << std::endl
+            << "ms2 = " << ms2 << std::endl
             << "lambda = " << lambda << std::endl
-            << "Mssq = " << Mssq << std::endl
+            << "lambdas = " << lambdas << std::endl
+            << "kappa = " << kappa << std::endl
             << "kappa1 = " << kappa1 << std::endl
-            << "kappa2 = " << kappa2 << std::endl;
-
-	std::cout << "The counterterm parameters are : " << std::endl;
-	std::cout << "DmuSq = " << DmuSq << std::endl
-            << "Dlambda = " << Dlambda << std::endl
-            << "DMssq = " << DMssq << std::endl
-            << "Dkappa1 = " << Dkappa1 << std::endl
-            << "Dkappa2 = " << Dkappa2 << std::endl
-            << "Dkappa = " << Dkappa << std::endl
-            << "Dlambdas = " << Dlambdas << std::endl
-            << "DT3 = " << DT3 << std::endl
-            << "DT5 = " << DT5 << std::endl;
-
+            << "kappa2 = " << kappa2 << std::endl
+            << "vs = " << vs << std::endl;
+            
 	std::cout << "The scale is given by mu = " << scale << " GeV " << std::endl;
-
 }
-
 
 /**
  * Calculates the counterterms. Here you need to work out the scheme and implement the formulas.
@@ -375,35 +243,7 @@ void Class_Potential_SMRSS::calc_CT(std::vector<double>& par){
 	  }
   }
    
-
-  DmuSq = (1.0/2.0)*(Deriv2(2,2) - 3.0*Deriv2(3,3) + (vs/C_vev0)*Deriv2(4,2));
-  Dlambda = (1.0/std::pow(C_vev0,2))*(Deriv2(3,3) - Deriv2(2,2));
-  Dkappa = (-1.0/(2*std::pow(vs,2)))*(6.0*Deriv1(4) - 2.0*C_vev0*Deriv2(4,2) - 2.0*vs*Deriv2(4,4));
-  Dlambdas = (1.0/(4.0*std::pow(vs,3)))*(4.0*Deriv1(4) - C_vev0*Deriv2(4,2) - 2.0*vs*Deriv2(4,4));
-  Dkappa2 = (-1.0/(C_vev0*vs))*Deriv2(4,2); 
-  DT3 = -1.0*Deriv1(2) + C_vev0*Deriv2(3,3);
-  
-  // DmuSq = 0;
-  // Dlambda = 0;
-  // Dkappa = 0;
-  // Dlambdas = 0;
-  // Dkappa2 = 0;
-  // DT3 = 0;
-  
-  DT5 = 0;
-  DMssq = 0;
-  Dkappa1 = 0;
-
-  par[0] = DmuSq;
-  par[1] = Dlambda;
-  par[2] = DMssq;
-  par[3] = Dkappa1;
-  par[4] = Dkappa2;
-  par[5] = Dkappa;
-  par[6] = Dlambdas;
-  par[7] = DT3;
-  par[8] = DT5;
-
+  // Nothing to do
 }
 
 
@@ -541,12 +381,12 @@ void Class_Potential_SMRSS::SetCurvatureArrays(){
           0, C_MassMu, 0,
           0, 0, C_MassTau;
 
-    Yu = (std::sqrt(2) / C_vev0)*(ckm.adjoint())*Mu*ckm;
-    Yd = (std::sqrt(2) / C_vev0)*ckm*Md*(ckm.adjoint());
+    // Yu = (std::sqrt(2) / C_vev0)*(ckm.adjoint())*Mu*ckm;
+    // Yd = (std::sqrt(2) / C_vev0)*ckm*Md*(ckm.adjoint());
 
     // If we don't wan't CKM mixing:
-    // Yu = (std::sqrt(2) / C_vev0)*Mu;
-    // Yd = (std::sqrt(2) / C_vev0)*Md;
+    Yu = (std::sqrt(2) / C_vev0)*Mu;
+    Yd = (std::sqrt(2) / C_vev0)*Md;
 
     Ye = (std::sqrt(2) / C_vev0)*Me;
 
@@ -772,48 +612,6 @@ void Class_Potential_SMRSS::SetCurvatureArrays(){
     Curvature_Lepton_F2H1[8][7][0] = Ye(2,2)/std::sqrt(2);
     Curvature_Lepton_F2H1[8][7][1] = (II*Ye(2,2))/std::sqrt(2);
 
-    // Old version
-    // Curvature_Gauge_G2H2[0][0][0][0] = std::pow(C_g,2)/(2.0);
-    // Curvature_Gauge_G2H2[0][0][1][1] = std::pow(C_g,2)/(2.0);
-    // Curvature_Gauge_G2H2[0][0][2][2] = std::pow(C_g,2)/(2.0);
-    // Curvature_Gauge_G2H2[0][0][3][3] = std::pow(C_g,2)/(2.0);
-    // Curvature_Gauge_G2H2[0][3][0][2] = (C_g)*(C_gs);
-    // Curvature_Gauge_G2H2[0][3][1][3] = (C_g)*(C_gs);
-    // Curvature_Gauge_G2H2[0][3][2][0] = (C_g)*(C_gs);
-    // Curvature_Gauge_G2H2[0][3][3][1] = (C_g)*(C_gs);
-    // Curvature_Gauge_G2H2[1][1][0][0] = std::pow(C_g,2)/(2.0);
-    // Curvature_Gauge_G2H2[1][1][1][1] = std::pow(C_g,2)/(2.0);
-    // Curvature_Gauge_G2H2[1][1][2][2] = std::pow(C_g,2)/(2.0);
-    // Curvature_Gauge_G2H2[1][1][3][3] = std::pow(C_g,2)/(2.0);
-    // Curvature_Gauge_G2H2[1][3][0][3] = (C_g)*(C_gs);
-    // Curvature_Gauge_G2H2[1][3][1][2] = -((C_g)*(C_gs));
-    // Curvature_Gauge_G2H2[1][3][2][1] = -((C_g)*(C_gs));
-    // Curvature_Gauge_G2H2[1][3][3][0] = (C_g)*(C_gs);
-    // Curvature_Gauge_G2H2[2][2][0][0] = std::pow(C_g,2)/(2.0);
-    // Curvature_Gauge_G2H2[2][2][1][1] = std::pow(C_g,2)/(2.0);
-    // Curvature_Gauge_G2H2[2][2][2][2] = std::pow(C_g,2)/(2.0);
-    // Curvature_Gauge_G2H2[2][2][3][3] = std::pow(C_g,2)/(2.0);
-    // Curvature_Gauge_G2H2[2][3][0][0] = ((C_g)*(C_gs))/(2.0);
-    // Curvature_Gauge_G2H2[2][3][1][1] = ((C_g)*(C_gs))/(2.0);
-    // Curvature_Gauge_G2H2[2][3][2][2] = -((C_g)*(C_gs))/(2.0);
-    // Curvature_Gauge_G2H2[2][3][3][3] = -((C_g)*(C_gs))/(2.0);
-    // Curvature_Gauge_G2H2[3][0][0][2] = (C_g)*(C_gs);
-    // Curvature_Gauge_G2H2[3][0][1][3] = (C_g)*(C_gs);
-    // Curvature_Gauge_G2H2[3][0][2][0] = (C_g)*(C_gs);
-    // Curvature_Gauge_G2H2[3][0][3][1] = (C_g)*(C_gs);
-    // Curvature_Gauge_G2H2[3][1][0][3] = (C_g)*(C_gs);
-    // Curvature_Gauge_G2H2[3][1][1][2] = -((C_g)*(C_gs));
-    // Curvature_Gauge_G2H2[3][1][2][1] = -((C_g)*(C_gs));
-    // Curvature_Gauge_G2H2[3][1][3][0] = (C_g)*(C_gs);
-    // Curvature_Gauge_G2H2[3][2][0][0] = ((C_g)*(C_gs))/(2.0);
-    // Curvature_Gauge_G2H2[3][2][1][1] = ((C_g)*(C_gs))/(2.0);
-    // Curvature_Gauge_G2H2[3][2][2][2] = -((C_g)*(C_gs))/(2.0);
-    // Curvature_Gauge_G2H2[3][2][3][3] = -((C_g)*(C_gs))/(2.0);
-    // Curvature_Gauge_G2H2[3][3][0][0] = std::pow(C_gs,2)/(2.0);
-    // Curvature_Gauge_G2H2[3][3][1][1] = std::pow(C_gs,2)/(2.0);
-    // Curvature_Gauge_G2H2[3][3][2][2] = std::pow(C_gs,2)/(2.0);
-    // Curvature_Gauge_G2H2[3][3][3][3] = std::pow(C_gs,2)/(2.0);
-
     // Derived using derivatives
     Curvature_Gauge_G2H2[0][0][0][0] = std::pow(C_g,2)/(2.0);
     Curvature_Gauge_G2H2[0][0][1][1] = std::pow(C_g,2)/(2.0);
@@ -856,11 +654,11 @@ void Class_Potential_SMRSS::SetCurvatureArrays(){
     Curvature_Gauge_G2H2[3][3][2][2] = std::pow(C_gs,2)/(2.0);
     Curvature_Gauge_G2H2[3][3][3][3] = std::pow(C_gs,2)/(2.0);
 
-    Curvature_Higgs_L2[0][0] = muSq;
-    Curvature_Higgs_L2[1][1] = muSq;
-    Curvature_Higgs_L2[2][2] = muSq;
-    Curvature_Higgs_L2[3][3] = muSq;
-    Curvature_Higgs_L2[4][4] = Mssq;
+    Curvature_Higgs_L2[0][0] = mu2;
+    Curvature_Higgs_L2[1][1] = mu2;
+    Curvature_Higgs_L2[2][2] = mu2;
+    Curvature_Higgs_L2[3][3] = mu2;
+    Curvature_Higgs_L2[4][4] = ms2;
 
     Curvature_Higgs_L3[0][0][4] = kappa1;
     Curvature_Higgs_L3[0][4][0] = kappa1;
